@@ -1,0 +1,611 @@
+ToReview List
+-------------
+--[[
+   This section of this file contains the list of things that recently got completed by (one of) the developers (G or R) w.r.t. the ccwp development project.
+
+   Review List conventions:
+   -  When a ToDo was fully completed, the last developer working on it moved it to this section.
+   -  The other developer should move the ToDo (including the sub ToDo's) to the ToDo history section of this file to indicate he/ she has
+      taken notice of the completion of the ToDo.
+   -  The intend is to do this fairly often should that this list is empty and we have a clear view on the actual ToDo section. ;-)
+]]
+
+R  mine v1: MineShaft mobj to generalise cobblestone collection in createNewWorld                                       (done)
+   R  Introduce role_miner (+ tests)                                                                                    (done)
+   R  Introduce MineShaft mobj (+ tests)                                                                                (done)
+   R  Add MineShaft construction to enterprise_gathering (+ tests)                                                      (done)
+   R  Build MineShaft from enterprise_colonization                                                                      (done)
+      R  remove CollectCobbleStone_Task from role_settler                                                               (done)
+
+R  merge enterprise_chest into enterprise_storage                                                                       (done)
+
+R  implement MineLayer                                                                                                  (done)
+
+R  Shop: implement ILObj                                                                                                (done)
+
+R  introduce ObjLocator class extending URL class representing a locator of an IObj                                     (done)
+   R  with methods                                                                                                      (done)
+      R  getObjClassName   (note: not getClassName as that is already reserved to identify the ObjLocator class itself) (done)
+      R  getObjClass                                                                                                    (done)
+      R  getObjRef                                                                                                      (done)
+   R  work with ObjLocator's instead of URL's                                                                           (done)
+      R  ObjHost                                                                                                        (done)
+      R  MObjHost                                                                                                       (done)
+      R  other places <hope I've had them all>                                                                          (done)
+
+R  hosting/ releasing, building/ dismantling v2.0                                                                       (done)
+   RG There are several aspects that could be taken into account in an upgraded version. Likely good to discuss:        (done)
+      RG Shop (currently) does not have a physical presence in the world. Hence having build and dismantle (both in Shop as enterprise_shop) seems incorrect.
+      RG Shop can however have WIP. Waiting for WIP to be completed now is done in dismantleAndReleaseMObj_ASrv
+      RG the above will also be the case for enterprise_wastehandling/(m)obj_wastehandler, and possibly also when we introduce ItemSupplierGroup and ItemDepotGroup
+      RG introduce some intermediate abstraction between IObj and IMObj: ILObj , i.e. a intangible/ logical Obj
+   R  introduce ObjHost class extending Host class                                                                      (done)
+      R  by splitting of all Object related code (from Host:getObj and further)                                         (done)
+      R  it can host any IObj                                                                                           (done)
+   R  Split off ILObj interface from IMObj                                                                              (done)
+      R  with methods                                                                                                   (done)
+         -  getId
+         -  construct
+         -  destruct
+      R  (note: an LObj is assumed to also be an IObj)                                                                  (done)
+
+R  introduce LObjHost class extending ObjHost                                                                           (done)
+   R  it can host any ILObj                                                                                             (done)
+   R  by splitting of from MObjHost + renaming them                                                                     (done)
+      R  hostMObj_SSrv                                                                                                  (done)
+      R  releaseMObj_SSrv                                                                                               (done)
+   R  MObjHost extends LObjHost                                                                                         (done)
+   R  adapt and test all tests                                                                                          (done)
+
+R  Factory improvements                                                                                                 (done)
+   R  remove static method style code (remaining from before it was a mobj)                                             (done)
+   R  Enhance ProductionSpot and make it similiar to an IItemSupplier                                                   (done)
+   R  ensure no longer need to register it as a module in the mobj library                                              (done)
+
+R  split ProductionSpot into CraftingSpot & SmeltingSpot                                                                (done)
+
+R  Settlement's                                                                                                         (done)
+   R  introduce Settlement Obj                                                                                          (done)
+   R  upgrade enterprise_colonization to a LObjHost                                                                     (done)
+   R  Turtle + UserStation: add settlementLocator field                                                                 (done)
+   R  host Shop's in enterprise_colonization (remove enterprise_shop)                                                   (done)
+   R  use Settlement to get (main)Shop                                                                                  (done)
+
+GR enterprise_assignmentboard: Introduce (system)triggers                                                               (done)
+
+ToDo List
+---------
+--[[
+   This section of this file contains the list of things we as developers (G & R) would like, or are considering to, ToDo w.r.t. the ccwp development project.
+
+   ToDo List conventions:
+   -  ToDo line
+      -  A ToDo line start with either a "-" or the first letter of the name of the developer that has or intents to pickup the ToDo
+      -  A ToDo line contains a brief description of what we want to do.
+   -  Sub ToDo's
+      -  ToDo's can contain sub ToDo's by adding them on the lines following the parent ToDo, and indenting the line with 3 spaces
+      -  Grouping related ToDo's, in a list of sub ToDo's, is a good practice (especially if they are intended to be picked up in the same timeframe)
+   -  Priority
+      -  ToDo's which the developer(s) deem to have a higher priority can/will be put higher in the ToDo List.
+   -  Completed ToDo's
+      -  When a ToDo is completed "(done)" should be added at the end of the ToDo line
+      -  A ToDo with sub ToDo's should only be marked as done if all sub ToDo's are also done
+      -  When a master ToDo (i.e. those who do not have a parent ToDo) is marked as done, the developer who does so should move it to the ToReview section.
+]]
+
+G  Robuste way to initialize and setup (like the core files do)
+   R  "not exactly sure what is meant by this ToDo, but probably the library.lua files are intended for this ..."
+      (see also startup.lua => ccwp.lua, and follow the code to the library.lua 's)
+   G  provide explantion or remove
+
+G  Descriptions for blueprints and project steps
+   G  Blueprint layer holds a desription / name
+   G  used to pass to project step (zodat het in de status schermen te zien is)
+   G  description field for debugging (done, use projectMeta.title and projectMeta.description)
+   G  project stappen kunnen een naam krijgen, add e.g stepName = "kaas" field to step block, e.g.
+         { stepType = "SSrv", stepName = "kaas", stepTypeDef = { moduleName = "enterprise_test", serviceName = "Test_SSrv" }, stepDataDef = {
+                { keyDef = "testArg"        , sourceStep = 0, sourceKeyDef = "testTable4" },
+         }},
+      en worden gebruikt voor sourceStep's, e.g.
+         { keyDef = "testArg"        , sourceStep = "kaas", sourceKeyDef = "testArgSource" },
+
+GR DisplayStation                                                                                                       (....)
+   R  Split it off from current UserStation code                                                                        (done)
+   G  Implement it in line with discussion at the end of 15/11 (see email(s))
+      -  ...
+      -  ...
+
+-  CraftingSpot & SmeltingSpot: make them full ItemSupplier's
+
+-  Turtle(s) improvements
+   -  getInventory(): implement allowing getting inventory of a turtle from any computer
+   -  creating a new Turtle: make sure it can get (provided) fuel, and maybe a pickaxe and a crafting station
+   -  create & better support for multiple turtles
+
+-  enterprise_employment Turtle improvements
+   -  resolving anyTurtleLocator
+      -  currently resolved by an override of getObj() in enterprise_employment
+      -  problems with current design:
+         -  we now fix a Turtle to specific work to early
+         -  which Turtle should be selected? (we now either take the current Turtle, or (in case of a none Turtle Worker) take the first Turtle in the list)
+         -  we do not take into account if the Turtle is actually available/ accepting (that type of) Work at this stage
+      -  Solution directions:
+         -  consider adjusting calling code/ project logic to select a specific Turtle as late as possible. Example places to investigate:
+            -  Turtle:storeItemsFrom_AOSrv: if source is not a turtle
+            -  ProductionSpot:provideItemsTo_AOSrv: Getting items (local input) into Turtle (first project step)
+            -  Chest:storeItemsFrom_AOSrv: get items into a turtle (first project step)
+         -  (better) somehow prevent the need to do this in getObj, ideally having a Turtle decide itself that it will take a "any Turtle" task somewhere in the assigment mechanism
+
+-  mine v2: Mine consisting of MineShaft (from surface level to underground) and MineLayers (underground)
+   -  MineLayer:needsTo_ProvideItemsTo: take # expected squares into account
+
+-  Consider if LObjLocator is wanted (it has already been made)
+   -  do we want LObjLocator (that has been made) or de we want to merge it into ObjLocator?
+      -  now used to easily construct (L)ObjLocator from LObj
+      -  usefull might be the getObjId method
+
+-  consider if ILObj/LObjHost should have upgrade/upgradeLObj_SSrv methods or leave it optional
+
+-  consider renaming (I)MObj to (I)PObj where P stands for Physical
+
+-  ItemSupplierGroup & ItemDepotGroup
+   -  there seems to be a pattern where multiple (m)obj's handle groups of ItemSupplier's (or ItemDepot's), e.g.
+      -  in the Shop (or WasteHandler)
+      -  for top chests
+      -  for storage "chests" in the Silo
+      -  in the Factory?
+   -  part of this code is/ seems to be the same
+   -  we should investigate if we can introduce a ItemSupplierGroup object (which itself is also an ItemSupplier?) that implements the common code that can subsequentyly be reused.
+
+-  waste handling (equivalent aan de shop: enterprise_wastehandling + (m)obj_wastehandler) (enterprise_wastehandling?)
+   -  v1
+      RG adjust part of IItemSupplier:provideItemsTo_AOSrv to get a wasteItemDepotLocator as argument                      (done)
+      R  add wasteItemDepotLocator to methods where (p|P)rovideItemsTo_AOSrv, and the parent methods of those, are used    (done)
+      -  gebruik wasteItemDepotLocator in factory (done)
+      -  gebruik wasteItemDepotLocator in forest, contruction
+      G  forrester return havested items so waste can be calculated
+   -  v2
+      -  create obj_wastehandler and enterprise_wastehandling
+      -  turtle registers in (m)obj_wastehandler
+      -  rename enterprise_storage into enterprise_warehousing
+      -  silo registers in (m)obj_wastehandler
+   -  v3
+      -  registers local chests of mobj's (forest, factory, etc) in (mo)bj_wastehandler
+      -  ensure it takes the closest
+
+-  IItemSupplier & IItemDepot interface
+   -  consider better name for provideTo and storeFrom reflecting the fact that storeFrom is simpler
+   -  don't do anything when itemList is empty --> where do check?
+   -  Improve IItemDepot tests after revising the interface
+      -  ensure we have generalised "pt" test function similar to IItemDepot
+         -  can_StoreItems_QOSrv
+         -  needsTo_StoreItemsFrom_SOSrv
+      -  implement for mobj_chest
+      -  implement for mobj_silo
+      -  implement for mobj_turtle
+
+-  World Master or mobj_city
+   -  Operates at the (currently for seen) highest (abstraction) layer in ccwp
+      -  Operates on the (mobj)enterprise layer types
+   -  Implementation option 1: upgrade the world using levels
+      -  It requests all enterprises to upgrade to the next world level
+         -  A level of an enterprise is determined by KPI's like e.g. wood capacity, forest size, # forests, etc
+      -  Once all enterprises have been upgraded, it upgrades the world to the next world level
+   -  Implementation option 2: alternative without scripting via levels
+
+-  BirchForest improvements
+   - support more than 6 trees (in the one column)
+
+-  Introduce Blueprint objects
+
+-  Ordering
+   -  Het order proces
+      -  de start van het order proces is een reservering. De reservering kan gedaan worden bij een partij die reserveringen accepteerd.
+         -  er zijn in eerste instantie drie type reserveringen
+            -  items (provide item)
+            -  fuel (zelfde als item, alleen bestemming is altijd een turtle die de brandstof gebruikt als laatste stap)
+            -  opslagruimte (depot)
+         -  er zijn meer type reserveringen in de toekomst te verwachten
+            -  tijd van turtle om iets te doen (nu via assignmentboard)
+            -  tijd van een cpu om iets te doen (langer dan 1 tick, geen turtle API nodig)
+            -  ruimte in de map om te bewegen (zoals de schacht van een silo/mijn, deel van een snelweg)
+            -  tijd van items in de wereld, zoals furnace, crafting table
+      -  het antwoord / de return value op de reservering is altijd een object / table, twee mogelijkheden
+         -  success == True
+            -  Het antwoord is een order object, de benodigde middelen (items, opslagruimte, ...) zijn gereserveerd. In de order staat informatie hierover.
+            -  Er wordt extra informatie gegeven over de order, bijvoorbeeld verwachte levertijd, brandstof kosten, etc.
+            -  Er MOET iets met dit object gedaan worden!
+               -  execute, de order wordt uitgevoerd
+               -  cancel, de order (en de onderliggende reserveringen) worden geannuleerd / vrijgegeven
+         -  success == False
+            -  Het antwoord is een table
+            -  Het antwoord bevat eventueel extra informatie, zoals bij een item order hoeveel wel geleverd kan worden.
+            -  Met het antwoord kan niks gedaan worden, informatie gebruiken waar nodig.
+   -  order object
+      -  bestaat altijd uit een OrderBase
+      -  bestaat altijd uit een (of meer?) van de hieronder genoemde typen
+         -  OrderBase
+            -  id
+            -  status
+            -  bevat reservering informatie, waar zijn zaken gereserveerd (dus met een locator en details over de reservering)
+            -  completeCallback, welke functie moet worden aangeroepen zodra deze order complete is
+            -  description - handig voor systeem monitoring en zo
+         -  ItemOrder
+            -  ItemTable            - bestelde items
+            -  aflever adres        - locator
+         -  FuelOrder
+            - Zelfde als ItemOrder, waarbij het aflever adres altijd een turtle is die alle items uit de item table gebruikt voor refuel()
+         -  DepotOrder
+            -  ItemTable            - te verwerken items
+            -  _itemSlots           - aantal slots nodig om de items op te slaan, berekend op basis van de itemTable
+            -  pick adres           - locator
+         -  CraftOrder
+            -  ItemTable            - to craft
+            -  ItemTable            - ingredients
+            -  ingredients locator  - locator
+            -  aflever adres        - locator
+         -  SmeltOrder
+            -  ItemTable            - to craft
+            -  ItemTable            - ingredients
+            -  aflever adres        - locator
+         -  BuiltOrder?
+            -  Blueprint
+            -  Location
+            -  ItemTable            - ingredients
+            -  ingredients locator  - locator
+   -  Consider creating and using "order" objects (maybe even generalise this to reservations)
+      -  order object that holds an outstanding order
+      -  order object holds the items concerned
+      -  order object can hold more information, like description
+      -  this will make an overview of outstanding orders possible
+      -  Discuss: maybe we should generalise the concept of an "order" further
+         -  if we set this up in a generic way it could be used to reserve/ claim
+            -  items
+            -  item space (slots in a slot inventory)
+            -  physical turtle space (e.g. for no 2 turtles into 1 shaft)
+            -  turtle physical movement time (related to the concept of WIP)
+            -  (management) execution time
+            -  ?energy/ fuel
+            -  ?tools
+            -  ...
+         -  Discuss: what is the best name for this concept: ?order, ?claim, ?reservation, ...
+         -  Next to having Reservation/ "order" objects, we likely need
+            -  reservationHandler objects (?IReservationHandler)
+               -  with methods to reserve, claim and release Reservation's
+            -  reservationId  (which likely is, resolves to or is related to a locator (URL))
+      -  improve IItemDepot and IItemSupplier interfaces
+         -  claiming items (in IItemSupplier)
+         -  free slots (in IItemDepot's)
+      -  availability of physical turtle space (e.g. no 2 turtles into 1 silo shaft)
+         - denk richting:
+            -  silo managed de beweging door de shaft
+            -  oplossingrichting:
+               -  specifieke projectstap eo assignment voor de MoveTo stap met een beschikbaarheids token voor de shaft die om een aantal project stappen heen staat
+               -  bijv. de stappen: [move de shaft in, haal items uit een storage kist, move de shaft uit] (binnen een protected sequence dmv de token)
+
+-  advanced Chest
+   -  different class like mobj chest
+   -  handles orders with item reservation
+      -  discuss: should this be part of/ handled via improved IItemSupplier interface (i.e. be applicable to all ItemSupplier's)?
+   -  handles waste with free space reservation
+      -  discuss: should this be part of/ handled via improved IItemDepot interface  (i.e. be applicable to all ItemDepot's)?
+   -  when items are pickup up / delivered, reservation is complete
+
+-  Obj(ect) Initialisation & Destruction: v2.5/ v3.0
+   -  ToDiscuss: Consider further revising Initialisation, some aspects to consider
+      -  Object new(fromTable) methods: consider return nil after a CheckInput failure (instead of empty table).
+         -  this propably depends on the usage of new. In case of constructing an instance we DO want to return a table. And we should set it's fields.
+         -  this might change if we implement the toTable and fromTable serialise/ deserialising logic below
+         -  goed testen dat alles nog goed gaat.
+      -  Serialising and deserialising objects
+         -  consider introducting methods newFromTable and serialiseToTable to handle from and to dht
+         -  provide a default implementing class (? maybe ObjBase)
+         -  replace current new method in almost all current objects with the above
+      -  construct method's currently in IMObj
+         -  adopt/ change to the above "new" method approach, i.e.
+            -  it should not take a table with the parameters + the parameters itself (also change MObjHost to reflect this change)
+            -  possibly remove them from IMObj but introduce some other mechanism for enforcing hosting child objects (via LObjHost:hostLObj_SSrv)
+      -  Consider introducing one or more interfaces (e.g. IInitialisation) for the above initialisation related methods
+      -  Reimplement ObjectFactory based on these developments
+
+-  enterprise_project
+   !  consider introducing a Project object (class)!, and using that in enterprise_project
+   -  (nested?) sequential projectStep
+            { stepType = "SerialSteps", stepTypeDef = { aoWIPId = "myId", }, stepDataDef = {                                        -- sourceStep = 10 (or stepName)
+                { stepType = "SSrv", stepTypeDef = { moduleName = "enterprise_test", serviceName = "Test_SSrv" }, stepDataDef = {   -- sourceStep = 10.1
+                    { keyDef = "testArg"        , sourceStep = 0, sourceKeyDef = "testArgSource" },
+                }},
+                { stepType = "ASrv", stepTypeDef = { moduleName = "enterprise_test", serviceName = "Test_ASrv" }, stepDataDef = {   -- sourceStep = 10.2
+                    { keyDef = "testArg"        , sourceStep = 0, sourceKeyDef = "testArgSource" },
+                }},
+
+                -- additional steps to perform in sequence                                                                          -- sourceStep = 10.n
+
+                returnData  = {
+                    { keyDef = "testBArg0"              , sourceStep = 0, sourceKeyDef = "testArgSource" },
+                }
+            }},
+   -  (nested?) parellel projectStep
+            { stepType = "ParellelSteps", stepTypeDef = { aoWIPId = "myId", }, stepDataDef = {
+                -- as above with any stepType (including SerialSteps), i.e.
+                -- sourceStep = 11.1
+                --              11.1.1
+                --              11.1.2 S
+                --              11.2
+
+                -- additional steps to perform in parellel                                                                          -- sourceStep = 11.n
+            }},
+   -  error handling (no_error, ignored errors, failed on error)
+
+-  enterprise management
+   -  for claiming manament execution time
+
+-  recipe book
+
+-  Bug: Factory:provideItemsTo_AOSrv meerdere items zorgt voor meerdere keren aanroepen van callback terwijl het er maar 1 moet zijn
+
+-  enterprise_energy
+   -  Investigate + possibly fix why we relatively soon need to go to L3 enterprise_energy in enterprise_colonization
+   -  coal fuel (v5 enterprise)
+
+-  tool management
+   -  does a turtle have it's own tools?
+
+-  Bij inschrijven assigment controleren of er een pickaxe in de inventory zit (indien not equiped)
+
+-  moveTo:
+   - v2.0: (snel) wegen (veel)
+
+-  concept: stand alone turtles / turtle slaves
+   -  turtle without wireless network possibility
+   -  turtle does one job, no rotation (like forestry or mining)
+   -  turtle stops when output chest is full / low on fuel
+   -  turtle continues when output chest is cleared / fuel is delivered
+   -  optional computer nearby for information hub, maybe wired connected
+   +++can be build with materials found, no given modems needed
+   ---differs alot from current implementation
+
+-  Other ToDo's to be found everywhere in all code files
+
+ToDo history
+------------
+--[[
+   This section of this file contains the ToDo items that have been fully completed, and that all developers acknowledge to have seen.
+
+
+   ToDo History conventions:
+   -  Newly completed and acknowledged ToDo's should be added at the top of this list. Hence, older ToDo's will be lower on the list.
+]]
+
+G  Debug: Modem events send but not received                                                                            (....)
+   - understand (seems buffer issue inside computercraft)
+   - resolve/ workaround (workaround, not solved. Synchronious code should consider yielding ("coroutine.yield()"))     (done)
+   - option to bundle messages, reduces count, not size.                                                                (done)
+
+R  Initialisation: v2.0                                                                                                 (done)
+   R  use Class:newInstance & instance:_init to create and initialise objects instances                                 (done)
+   R  adopt this approach for all classes                                                                               (done)
+      R  TestObj                                                                                                        (done)
+      R  Location                                                                                                       (done)
+      R  URL                                                                                                            (done) note: a lot of URL:new remaining where a table is given due to indirect dht retrieval
+      R  Inventory                                                                                                      (done)
+      R  ObjTable                                                                                                       (done)
+      R  ObjArray                                                                                                       (done)
+      R  CallDef                                                                                                        (done)
+      R  Callback                                                                                                       (done)
+      R  TaskCall                                                                                                       (done)
+      R  WIPQueue                                                                                                       (done)
+      R  Block                                                                                                          (done)
+      R  CodeMap                                                                                                        (done)
+      R  LayerRectangle                                                                                                 (done)
+      R  ItemTable                                                                                                      (done)
+      R  WIPAdministrator                                                                                               (done)
+      R  ObjBase                                                                                                        (done)
+      R  TestMObj                                                                                                       (done)
+      R  Chest                                                                                                          (done)
+      R  ProductionSpot                                                                                                 (done)
+      R  Silo                                                                                                           (done)
+      R  BirchForest                                                                                                    (done)
+      R  Factory                                                                                                        (done)
+      R  Mine                                                                                                           (done)
+      R  Shop                                                                                                           (done)
+      R  Turtle                                                                                                         (done)
+      R  Host                                                                                                           (done)
+      R  MObjHost                                                                                                       (done)
+
+R  Obj(ect) Initialisation: improve v1.1                                                                                (done)
+   R  rename section base methods => initialisation                                                                     (done)
+   R  remove new from IObj (+ move most implementations to correct section)                                             (done)
+
+R  Improve MObjHost                                                                                                     (done)
+   R  Support extending and upgrading of MObj's                                                                         (done)
+
+R  Introduce multiple inheritance                                                                                       (done)
+   R  Introduce Class meta class with methods for                                                                       (done)
+      R  Checking if an object (or class) is an instance of a class.                                                    (done)
+      R  Creating a new class by inheriting functionality from a chain of other classes.                                (done)
+      R  Creating new instances (objects) of a Class.                                                                   (done)
+   R  Use Class.NewClass for creating all classes                                                                       (done)
+
+R  ensure all ItemSupplier's inherit IItemSupplier interface                                                            (done)
+   R  mobj_birchforest                                                                                                  (done)
+   R  mobj_chest                                                                                                        (done)
+   R  mobj_factory                                                                                                      (done)
+   R  mobj_mine                                                                                                         (done)
+   R  mobj_silo                                                                                                         (done)
+   R  mobj_shop                                                                                                         (done)
+   R  mobj_turtle                                                                                                       (done)
+
+R  ensure all ItemDepot's inherit ItemDepot interface                                                                   (done)
+   R  mobj_chest                                                                                                        (done)
+   R  mobj_silo                                                                                                         (done)
+   R  mobj_turtle                                                                                                       (done)
+
+R  Generalise IObj test functions into "templates" to reduce duplication                                                (done)
+   R  adopt naming convention to name generic (i.e. taking parameters) tests starting with pt_                          (done)
+   R  generalise IObj test functions                                                                                    (done)
+
+R  Introduce ObjBase, a class that can be used as the base class for any class implementing IObj interface              (done)
+   R  convert Location to a proper IObj                                                                                 (done)
+   R  convert URL to a proper IObj                                                                                      (done)
+   R  convert Chest to a proper IObj                                                                                    (done)
+   R  convert Inventory to a proper IObj                                                                                (done)
+   R  convert ProductionSpot to a proper IObj                                                                           (done)
+   R  convert ObjTable to a proper IObj                                                                                 (done)
+   R  convert ObjArray to a proper IObj                                                                                 (done)
+   R  convert TestObj to a proper IObj                                                                                  (done)
+   R  convert Silo to a proper IObj                                                                                     (done)
+   R  convert CallDef to a proper IObj                                                                                  (done)
+   R  convert WIPQueue to a proper IObj                                                                                 (done)
+   R  convert Block to a proper IObj                                                                                    (done)
+   R  convert LayerRectangle to a proper IObj                                                                           (done)
+   R  convert ItemTable to a proper IObj                                                                                (done)
+   R  convert WIPAdministrator to a proper IObj                                                                         (done)
+   R  convert TestMObj to a proper IObj                                                                                 (done)
+   R  convert BirchForest to a proper IObj                                                                              (done)
+   G  convert Factory to a proper IObj                                                                                  (done)
+   R  convert Mine to a proper IObj                                                                                     (done)
+   R  convert Shop to a proper IObj                                                                                     (done)
+   R  convert Turtle to a proper IObj                                                                                   (done)
+   R  convert Host to a proper IObj                                                                                     (done)
+   R  convert MObjHost to a proper IObj                                                                                 (done)
+
+R  IInterface (test) module                                                                                             (done)
+   R  Introduce IInterface module file with functions other interfaces can use                                          (done)
+      R  Adopt IInterface in all interfaces                                                                             (done)
+   R  Introduce T_IInterface test module with test functions other tests on interfaces can use                          (done)
+      R  Adopt T_IInterface for all interface related tests                                                             (done)
+
+R  add .lua extension to almost all lua code files (besides being a good convention, it also helps in the VSC)          (done)
+
+R  CheckInput                                                                                                           (done)
+   R  add .lua to module file input_checker                                                                             (done)
+
+G  corejob: remove module (if possible) (done)
+
+R  IObj                                                                                                                 (done)
+   R  rename isSame to isEqual                                                                                          (done)
+   (based on a chat with chatgpt as well as literature study on identity and equality in OOP (e.g. look here: https://stackoverflow.com/questions/1692863/what-is-the-difference-between-identity-and-equality-in-oop) )
+
+R  (t_)object.lua                                                                                                       (done)
+   R  introduce general IsInstanceOf function                                                                           (done)
+
+R  Dummy callback                                                                                                       (done)
+   R  in more logical class                                                                                             (done)
+   R  easier way to obtain (via Callback.GetNewDummyCallBack())                                                         (done)
+
+R  finish MObjHost
+   R  test delistMObj_SSrv                                                                                              (done)
+   R  test removeMObj_ASrv                                                                                              (done)
+   R  remove completeRunningBusiness_AOSrv from IMObj interface                                                         (done)
+   R  rewrite waiting for completion of running business (remove usage of completeRunningBusiness_AOSrv + use WIPAdministrator)  (done)
+   R  (re)consider relevant method naming:                                                                              (done)
+                  MObjHost          MObjHost       (MObj)Host  MObj           MObj        -  MObjHost                MObjHost    (MObj)Host     MObj                 MObj        -  ent_constr
+      - now:      addMObj           registerMObj   saveObject  buildBlueprint construct   -  removeMObj              delistMObj  deleteResource dismantleBlueprint   destruct    -  build
+      - option1:  createNew         ?              ?           buildBlueprint construct   -  destroy                 ?           ?              dismantleBlueprint   destruct    -  build
+      - option2:  hostAndBuildMObj  hostMObj       saveObject  buildBlueprint construct   -  dismantleAndReleaseMObj releaseMObj deleteResource dismantleBlueprint   destruct    -  build
+      - based on the following conversation I have chosen option 2: https://chat.openai.com/share/65d3e63b-7618-4522-a436-e88964f4d293
+
+R  WIPAdministrator (formerly knows as AdministrationOffice)   (done)
+   R  introduce enterprise_administration                      (done)
+   R  finish WIPAdministrator                                  (done)
+      R  load/ save itself after one if the 3 WIP calls        (done)
+   R  enterprise_project: optionally administer project started and completed in WIPAdministrator  (done)
+   R  write WIPAdministrator tests                             (done)
+
+G  moveTo:
+   G v1.2: boven maaiveld even wat intilligenter dan nu        (done)
+
+G  display station (Yahoo!!, working (except for building it)) (done)
+   -  system status (e.g. fuel per turtle, silo)               (done)
+   -  logging                                                  (done)
+
+G  turtle without db/inventory.lua file should check for tool present (done)
+
+G  Display verbeteren
+   G  display blijft na kiezen van een test optie in de groep waar de test gekozen is (done)
+   G  display gebruikt 2 kolommen als er veel tests zijn (done)
+
+R  Building blueprints/layers from front                                                                                (done)
+   R  Support building blueprints (layers) from front                                                                   (done)
+   R  Figure out how to properly orient Monitors... (see t_builder.T_BuildLayer_Task_Front)                             (done)
+
+R  Propely Build UserStation by using role_builder                                                                      (done)
+
+R  ensure all MObj's implement and follow IMObj interface                                                               (done)
+   R  generalise (I)MObj test functions; i.e. for construct, destruct, etc                                              (done)
+   R  mobj_test                                                                                                         (done)
+   R  mobj_birchforest                                                                                                  (done)
+   R  mobj_chest                                                                                                        (done)
+   R  mobj_factory                                                                                                      (done)
+   R  mobj_silo                                                                                                         (done)
+   R  mobj_turtle                                                                                                       (done)
+
+R  use MObjHost class                                                                                                   (done)
+   R  generalise MObjHost test functions; i.e. for hosting, building, releasing, etc                                    (done)
+   R  enterprise_forestry                                                                                               (done)
+      R  upgrade to a MObjHost                                                                                          (done)
+      R  use new MObjHost methods instead of current equivalent                                                         (done)
+      R  use generalised test functions                                                                                 (done)
+   R  enterprise_chest                                                                                                  (done)
+      R  upgrade to a MObjHost                                                                                          (done)
+      R  use new MObjHost methods instead of current equivalent                                                         (done)
+      R  use generalised test functions                                                                                 (done)
+   R  enterprise_manufacturing                                                                                          (done)
+      R  upgrade to a MObjHost                                                                                          (done)
+      R  use new MObjHost methods instead of current equivalent                                                         (done)
+      R  use generalised test functions                                                                                 (done)
+   R  enterprise_storage                                                                                                (done)
+      R  upgrade into an MObjHost                                                                                       (done)
+      R  use new MObjHost methods instead of current equivalent                                                         (done)
+      R  use generalised test functions                                                                                 (done)
+   R  enterprise_turtle                                                                                                 (done)
+      R  upgrade into an MObjHost                                                                                       (done)
+      R  use new MObjHost methods instead of current equivalent                                                         (done)
+      R  use generalised test functions                                                                                 (done)
+
+R  enterprise_employment/ IWorker, a generalisation of enterprise_turtle/ Turtle                                        (done)
+      R  introduce IWorker interface (rename IProcessor + improve definition)                                           (done)
+      R  have Turtle implement IWorker                                                                                  (done)
+      R  introduce and apply IWorker tests                                                                              (done)
+      R  replace turtleId variables with workerId                                                                       (done)
+      R  rename enterprise_turtle to enterprise_employment                                                              (done)
+      R  generalize specific enterprise_employment methods to handle any IWorker                                        (done)
+      R  modify bootstrapping users of enterprise_workforce/ Turtle to use generalised enterprise_workforce methods     (done)
+      R  enable booting a new IWorker: startup, getWorkedId, set in Obj, reboot, etc                                    (done)
+
+R  replace table.unpack(arg) with ... everywhere                                                                        (done)
+
+R  Revise modules/ libraries file directory structure                                                                   (done)
+   R  introduce base library for base modules (lower level than Obj's)                                                  (done)
+   R  introduce lobj library for lobj modules (logical/ intangible Obj's)                                               (done)
+
+R  Extend IMObj (and all MObj's) with getBaseLocation                                                                   (done)
+
+RG UserStation v1.0                                                                                                     (done)
+   GR Initial prototype implementation                                                                                  (done)
+   R  Modify it to be an IWorker                                                                                        (done)
+   R  Enable input & output chests                                                                                      (done)
+   R  Move some of the current code in enterprise_utilities to (mobj) UserStation                                       (done)
+   R  Host it in enterprise_employment (and make enterprise_utilities obsolete/ remove it)                              (done)
+   R  UserStation no longer an ItemDepot                                                                                (done)
+
+R  Revise deleting and resetting the World and Workers.                                                                 (done)
+   R  These can now easily be done in a Turtle from the "All" menu (option 1)                                           (done)
+
+R  Generalised IItemSupplier test functions for MObj's                                                                  (done)
+   R  generalise IItemSupplier test functions                                                                           (done)
+      R  provideItemsTo                                                                                                 (done)
+      R  needsTo_ProvideItemsTo                                                                                         (done)
+      R  can_ProvideItems                                                                                               (done)
+   R  use in Shop                                                                                                       (done)
+   R  use in mobj_birchforest                                                                                           (done)
+   R  use in mobj_chest                                                                                                 (done)
+   R  use in mobj_factory                                                                                               (done)
+   R  use in mobj_silo                                                                                                  (done)
+   R  use in mobj_turtle                                                                                                (done)
+
+R  Generalised IItemDepot storeItemsFrom_AOSrv test function for MObj's                                                 (done)
+   R  use in mobj_chest                                                                                                 (done)
+   R  use in mobj_silo                                                                                                  (done)
+   R  use in mobj_turtle                                                                                                (done)

@@ -1,0 +1,48 @@
+Hoe doen we de opslag aan het einde van een stuk werk?
+======================================================
+
+Waar komt dit nu voor?
+- factory
+- forest
+- mine
+- construction
+
+oplossing richtingen
+1) aan het einde van een assignment moet inventory "leeg" is (dwz afval moet er iig uit)
+   + een nieuwe assignment begint schoon
+   - zelf oplossen aan t einde assignment
+   - wat doet dit met de hoger liggende IDepot & ISupplier logica?
+
+2) aan het einde van (of in) een project
+   + factory: is te doen
+   + forest: is te doen
+   + mine: is te doen (als analoog aan (todo) forest)
+   ? construction: uitzoeken wat de consequentie hiervan is voor grote bouw projecten
+   - gaat dit goed met energy management?
+      - "als energy handling tussen deze stappen gaat zitten hebben we een probleem"
+      - wellicht toevoegen: ultra urgente stap:
+
+=> Voor nu denken we dat optie 2 beter is.
+
+
+
+
+Objects: shouldn't objects have their own responsibility to load and save themself?
+===================================================================================
+
+G: YES!
+R: not yet sure
+
+- if yes: what is the best way to implement this
+
+
+Design van een mijn
+-------------------
+
+- implementatie met nested ItemSupplier's
+   - 1 mijn
+      - 1 schacht             verticaal omlaag (1x om naar beneden te komen)
+         - 2xn as             zit aan de schacht vast
+            - 2xm gang        vanaf as naar 1 kant (en ook een gang de andere kant op)
+
+-

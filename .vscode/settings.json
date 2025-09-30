@@ -1,0 +1,21 @@
+{
+    "Lua.diagnostics.globals": [
+        "turtle",
+        "textutils",
+        "fs",
+        "system",
+        "term",
+        "read",
+        "write",
+        "peripheral",
+        "sleep",
+        "parallel",
+        "pocket",
+        "commands",
+        "settings"
+    ],
+    "Lua.diagnostics.disable": [
+        "deprecated",
+        "undefined-field"
+    ]
+}
