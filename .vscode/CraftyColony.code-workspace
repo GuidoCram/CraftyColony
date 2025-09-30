@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../data/computercraft/lua/rom/apps"
+		},
+		{
+			"path": "../data/computercraft/lua/rom/autorun"
+		},
+		{
+			"path": "../data/computercraft/lua/rom/modules"
+		}
+	]
+}
