@@ -46,6 +46,9 @@ local db	    = {
 	highQueue		= {},				-- high priority queue
 	normalQueue		= {},				-- normal priority queue
 	lowQueue		= {},				-- low priority queue
+
+	-- local status of shutting down
+	shuttingDown	= false,
 }
 
 --[[
@@ -58,6 +61,17 @@ local db	    = {
 
 --]]
 
+local function GetNextActivity()
+
+	-- check the queues in order of priority
+	    if #db.highQueue   > 0 then return table.remove(db.highQueue, 1)
+	elseif #db.normalQueue > 0 then return table.remove(db.normalQueue, 1)
+	elseif #db.lowQueue    > 0 then return table.remove(db.lowQueue, 1)
+	end
+
+	-- still here, no activity
+	return nil
+end
 
 
 --[[
@@ -73,6 +87,7 @@ local db	    = {
 --]]
 
 function coreact.AddActivity(func, data, priority)
+
 	-- add the function to the appropriate queue based on priority
 		if priority == "high"	then table.insert(db.highQueue, 	{ func=func, data=data })
 	elseif priority == "low"	then table.insert(db.lowQueue, 		{ func=func, data=data })
@@ -81,15 +96,40 @@ function coreact.AddActivity(func, data, priority)
 end
 
 function coreact.Init()
+	-- nothing to initialize at the moment
 end
 
 function coreact.Setup()
+	-- nothing to setup at the moment
 end
 
 function coreact.Run()
+
+	-- run until we are shutting down
+	while not db.shuttingDown do
+
+		-- get the next activity from the queues
+		local activity = GetNextActivity()
+
+		-- if there is an activity, run it
+		if activity then
+
+			-- call it! (pcall is protective call to catch errors)
+			local status, err = pcall(activity.func, activity.data)
+
+			-- check the result
+			if not status then print("Error in coreact.Run: "..err) end
+
+		else
+			-- if no activity, sleep for a short time to prevent busy waiting
+			os.sleep(0.1)
+		end
+	end
 end
 
 function coreact.Shutdown()
+	-- just change the status, nothing more at this point. We need to wait for the work to finish
+	db.shuttingDown = true
 end
 
 
