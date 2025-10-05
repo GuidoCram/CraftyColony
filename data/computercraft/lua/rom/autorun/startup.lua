@@ -1,6 +1,6 @@
-package.path = package.path..";/rom/modules/ccwp/?;/rom/modules/ccwp/?.lua"
+-- package.path = package.path..";/rom/modules/ccwp/?;/rom/modules/ccwp/?.lua"
 
-local ccwp = require "ccwp"
+-- local ccwp = require "ccwp"
 
-ccwp.Init()
-ccwp.Startup()
+-- ccwp.Init()
+-- ccwp.Startup()

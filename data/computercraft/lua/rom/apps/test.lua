@@ -1,10 +1,52 @@
+
+
+for n=1,3 do
+	for n=1,60 do
+		turtle.dig()
+		turtle.forward()
+		turtle.turnRight()
+		turtle.dig()
+		turtle.turnLeft()
+		turtle.turnLeft()
+		turtle.dig()
+		turtle.turnRight()
+	end
+
+	turtle.digUp()
+	turtle.up()
+	turtle.turnRight()
+	turtle.dig()
+	turtle.turnRight()
+	turtle.turnRight()
+	turtle.dig()
+	turtle.turnLeft()
+
+	for n=1,60 do
+		turtle.dig()
+		turtle.forward()
+		turtle.turnRight()
+		turtle.dig()
+		turtle.turnLeft()
+		turtle.turnLeft()
+		turtle.dig()
+		turtle.turnRight()
+	end
+
+	turtle.down()
+	turtle.turnRight()
+	turtle.forward()
+	turtle.forward()
+	turtle.forward()
+	turtle.turnRight()
+end
+
 --os.loadAPI( "/rom/apis/system" )
 
-require "/rom/apis/core/dht"
-require "/rom/apis/core/event"
-require "/rom/apis/core/utils"
+--require "/rom/apis/core/dht"
+--require "/rom/apis/core/event"
+--require "/rom/apis/core/utils"
 
-system.Run()
+--system.Run()
 
 --local squareSize = 6
 --local x = 10
