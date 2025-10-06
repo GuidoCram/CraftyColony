@@ -29,7 +29,7 @@ local CoreDisk = {}
 
 --]]
 
-local db	    = {
+local db = {
     -- queue for disk operations
     readQueue       = {},           -- reading has priority over writing
     writeQueue      = {},           -- writing has no harm in queueing

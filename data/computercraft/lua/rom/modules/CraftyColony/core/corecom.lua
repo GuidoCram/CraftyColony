@@ -1,5 +1,5 @@
 -- define module
-local corecom = {}
+local CoreCom = {}
 
 -- imports
 
@@ -56,15 +56,15 @@ local db	    = {
 
 --]]
 
-function corecom.Init()
+function CoreCom.init()
 	-- nothing to initialize at the moment
 end
 
-function corecom.Setup()
+function CoreCom.setup()
 	-- nothing to setup at the moment
 end
 
-function corecom.Run()
+function CoreCom.run()
 
 	-- run until we are shutting down
 	while not db.shuttingDown do
@@ -74,7 +74,7 @@ function corecom.Run()
 	end
 end
 
-function corecom.Shutdown()
+function CoreCom.Shutdown()
 	-- just change the status, nothing more at this point. We need to wait for the work to finish
 	db.shuttingDown = true
 end
@@ -92,4 +92,4 @@ end
 
 
 -- done
-return corecom
+return CoreCom

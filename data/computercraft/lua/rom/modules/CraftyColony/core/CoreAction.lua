@@ -1,12 +1,8 @@
 -- define module
-local coreact = {}
+local CoreAction = {}
 
 -- imports
---local coreact       = require "core.act"
---local corecom       = require "core.com"
---local coredisk      = require "core.disk"
---local coreevent     = require "core.event"
---local coreui        = require "core.ui"
+
 
 --[[
       _                     _       _   _
@@ -48,6 +44,7 @@ local db	    = {
 	lowQueue		= {},				-- low priority queue
 
 	-- local status of shutting down
+	acceptingWork	= true,
 	shuttingDown	= false,
 }
 
@@ -61,7 +58,7 @@ local db	    = {
 
 --]]
 
-local function GetNextActivity()
+local function getNextActivity()
 
 	-- check the queues in order of priority
 	    if #db.highQueue   > 0 then return table.remove(db.highQueue, 1)
@@ -86,30 +83,37 @@ end
 
 --]]
 
-function coreact.AddActivity(func, data, priority)
+-- function to add an activity to the queue
+function CoreAction.addActivity(func, data, priority, description)
+	-- func			the function to call
+	-- data			the data to pass to the function
+	-- priority		the priority of the activity: 'high', 'normal', 'low' (default: 'normal')
+	-- description	the description of the activity (for debugging purposes)
 
 	-- add the function to the appropriate queue based on priority
-		if priority == "high"	then table.insert(db.highQueue, 	{ func=func, data=data })
-	elseif priority == "low"	then table.insert(db.lowQueue, 		{ func=func, data=data })
-								else table.insert(db.normalQueue,	{ func=func, data=data })
+		if not db.acceptingWork then return end
+	elseif priority == "high"	then table.insert(db.highQueue, 	{ func = func, data = data, description = description })
+	elseif priority == "low"	then table.insert(db.lowQueue, 		{ func = func, data = data, description = description })
+								else table.insert(db.normalQueue,	{ func = func, data = data, description = description })
 	end
 end
 
-function coreact.Init()
+function CoreAction.init()
 	-- nothing to initialize at the moment
 end
 
-function coreact.Setup()
+function CoreAction.setup()
 	-- nothing to setup at the moment
 end
 
-function coreact.Run()
+-- main run function, runs in parallel to the other core modules
+function CoreAction.run()
 
 	-- run until we are shutting down
 	while not db.shuttingDown do
 
 		-- get the next activity from the queues
-		local activity = GetNextActivity()
+		local activity = getNextActivity()
 
 		-- if there is an activity, run it
 		if activity then
@@ -118,20 +122,28 @@ function coreact.Run()
 			local status, err = pcall(activity.func, activity.data)
 
 			-- check the result
-			if not status then print("Error in coreact.Run: "..err) end
+			if not status then print("Error in CoreAction.run when processing '"..(activity.description or "unknown").."': "..err) end
 
 		else
 			-- if no activity, sleep for a short time to prevent busy waiting
-			os.sleep(0.1)
+			if db.acceptingWork == false then
+
+				-- we are shutting down, all work is done
+				db.shuttingDown = true
+			else
+
+				-- just normal idle operation
+				os.sleep(0.1)
+			end
 		end
 	end
 end
 
-function coreact.Shutdown()
-	-- just change the status, nothing more at this point. We need to wait for the work to finish
-	db.shuttingDown = true
+-- initializes shutting down, stops accepting new work
+function CoreAction.shutdown()
+	-- just change the status of accepting work so the queue will be cleared before actually shutting down
+	db.acceptingWork = false
 end
-
 
 --[[
            _
@@ -144,4 +156,4 @@ end
 --]]
 
 -- done
-return coreact
+return CoreAction

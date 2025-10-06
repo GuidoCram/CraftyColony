@@ -1,5 +1,5 @@
 -- define module
-local queue = {}
+local Timer = {}
 
 -- imports
 
@@ -14,10 +14,7 @@ local queue = {}
                              |_|
 
 
-	This module provides a simple queue system with basis functions to add and remove items from the queue.
-	The queue can be used like javascript arrays, like push, pop, shift, unshift, etc.
-
-	This general modules might be useless because lua has tables which can be used like arrays, including removing the first element.
+  This module implements a simple timer based on events.
 
 --]]
 
@@ -31,7 +28,9 @@ local queue = {}
 
 --]]
 
--- no data
+local db = {
+  timers      = {} -- table of all active timers
+}
 
 --[[
   _                 _
@@ -56,34 +55,6 @@ local queue = {}
  |_|
 
 --]]
-
-function queue.New()
-	return {}
-end
-
-function queue.append(q, item)
-	table.insert(q, item)
-end
-
-function queue.push(q, item)
-	table.insert(q, item)
-end
-
-function queue.pop(q)
-	return table.remove(q)
-end
-
-function queue.shift(q)
-	return table.remove(q, 1)
-end
-
-function queue.unshift(q, item)
-	table.insert(q, 1, item)
-end
-
-function queue.length(q)
-	return #q
-end
 
 --[[
            _
