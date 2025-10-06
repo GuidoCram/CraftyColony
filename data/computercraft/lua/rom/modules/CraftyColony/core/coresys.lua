@@ -61,7 +61,7 @@ local function Init()
    	-- run all init functions
     coreact.Init()
     corecom.Init()
-    coredisk.Init()
+    CoreDisk.init()
     coreevent.Init()
     coreui.Init()
 
@@ -78,7 +78,7 @@ local function Setup()
 	-- run all setup functions
     coreact.Setup()
     corecom.Setup()
-    coredisk.Setup()
+    CoreDisk.setup()
     coreevent.Setup()
     coreui.Setup()
 
@@ -109,7 +109,7 @@ local function Shutdown()
     -- run all shutdown functions
     coreact.Shutdown()
     corecom.Shutdown()
-    coredisk.Shutdown()
+    CoreDisk.shutdown()
     coreevent.Shutdown()
     coreui.Shutdown()
 end
@@ -148,7 +148,7 @@ function coresys.Run(callback)
     	parallel.waitForAll(
 			coreact.Run,
 			corecom.Run,
-			coredisk.Run,
+			CoreDisk.run,
 			coreevent.Run,
 			coreui.Run,
             RunCallback

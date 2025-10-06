@@ -1,5 +1,5 @@
--- coredisk.lua
-local coredisk = {}
+-- CoreDisk.lua
+local CoreDisk = {}
 
 -- imports
 
@@ -31,7 +31,8 @@ local coredisk = {}
 
 local db	    = {
     -- queue for disk operations
-    operationQueue      = {},           -- writing has no harm in queueing
+    readQueue       = {},           -- reading has priority over writing
+    writeQueue      = {},           -- writing has no harm in queueing
 
     -- local status of shutting down
 	shuttingDown	= false,
@@ -47,12 +48,33 @@ local db	    = {
 
 --]]
 
-local function GetNextOperation()
-    -- something to write?
-    if #db.operationQueue > 0 then return table.remove(db.operationQueue, 1) end
+local function getNextOperation()
+    -- something to read or write?
+        if #db.readQueue  > 0 then return table.remove(db.readQueue, 1)
+    elseif #db.writeQueue > 0 then return table.remove(db.writeQueue, 1)
+    end
 
     -- still here, no operation
     return nil
+end
+
+-- for reading files asynchronously
+local function readFileAsync(path, callback)
+
+    -- try to open the file
+    local file = fs.open(path, "r")
+    local data = nil
+
+    -- only when we could open the file
+    if file then
+
+        -- read all contents
+        data = file.readAll()
+        file.close()
+    end
+
+    -- call the callback function with the contents (if any)
+    if callback then callback(data) end
 end
 
 -- for writing files asynchronously
@@ -94,79 +116,95 @@ end
 
 --]]
 
-function coredisk.Init()
+function CoreDisk.init()
 	-- nothing to initialize at the moment
 end
 
-function coredisk.Setup()
+function CoreDisk.setup()
 	-- nothing to setup at the moment
 end
 
-function coredisk.Run()
+function CoreDisk.run()
 
     -- run until we are shutting down
     while not db.shuttingDown do
 
         -- get the next operation
-        local operation = GetNextOperation()
+        local operation = getNextOperation()
 
         -- something to do?
         if operation then
 
             -- what kind of operation?
-            if operation.operation == "delete" then
+            if operation.operation == "read" then
 
-                -- let's delete!
-                deleteFileAsync(operation.path)
+                -- yeah, reading a file is fun!
+                readFileAsync(operation.path, operation.callback)
 
             elseif operation.operation == "write" then
 
                 -- let's write!
                 writeFileAsync(operation.path, operation.mode, operation.data)
+
+            elseif operation.operation == "delete" then
+
+                -- let's delete!
+                deleteFileAsync(operation.path)
             end
         else
-
             -- currently nothing to do, just sleep a bit
             os.sleep(0.1)
         end
     end
 end
 
--- Reads the entire contents of a file from disk
-function coredisk.readFile(path)
-    local file = fs.open(path, "r")
-    if not file then
-        return nil, "File not found: " .. path
-    end
-    local contents = file.readAll()
-    file.close()
-    return contents
+-- Reads the entire contents of a file from disk async, will call the callback with the data (or nil)
+function CoreDisk.readFile(path, callback)
+
+    -- handle later
+    table.insert(db.operationQueue, {operation="read", path=path, callback=callback})
 end
 
--- Writes data to a file on disk (overwrites existing)
-function coredisk.writeFile(path, data)
+-- Writes data to a file on disk async (overwrites existing)
+function CoreDisk.writeFile(path, data)
 
     -- handle later
     table.insert(db.operationQueue, {operation="write", path=path, mode="w", data=data})
 end
 
--- Appends data to a file on disk
-function coredisk.appendFile(path, data)
+-- Appends data to a file on disk async
+function CoreDisk.appendFile(path, data)
 
     -- handle later
     table.insert(db.operationQueue, {operation="write", path=path, mode="a", data=data})
 end
 
 -- Checks if a file exists
-function coredisk.exists(path)
+function CoreDisk.exists(path)
     return fs.exists(path)
 end
 
 -- Deletes a file
-function coredisk.delete(path)
+function CoreDisk.delete(path)
 
     -- handle later
     table.insert(db.operationQueue, {operation="delete", path=path})
 end
 
-return coredisk
+function CoreDisk.shutdown()
+    -- set the flag to stop running
+    db.shuttingDown = true
+end
+
+--[[
+           _
+          | |
+  _ __ ___| |_ _   _ _ __ _ __
+ | '__/ _ \ __| | | | '__| '_ \
+ | | |  __/ |_| |_| | |  | | | |
+ |_|  \___|\__|\__,_|_|  |_| |_|
+
+
+--]]
+
+return CoreDisk
