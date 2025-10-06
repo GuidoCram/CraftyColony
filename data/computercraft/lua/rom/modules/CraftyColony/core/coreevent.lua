@@ -21,7 +21,6 @@ local db = {
 
 -- object / function references
 local listener    	= {}
-local eventready	= {}	-- list of functions to run when ready
 
 -- init of core event
 function coreevent.Init()
@@ -32,13 +31,6 @@ function coreevent.Setup()
 
     -- this will create a loop of one event every tick at least, I don't think this is usefull for event, maybe for messaging
 --    coreevent.CreateTimeEvent(1, db.protocol, "tick timer")
-end
-
--- others can register a function to be run when the event loop is (about to be) started
-function coreevent.EventReadyFunction(func)
-
-	-- just add function to the list
-	table.insert(eventready, func)
 end
 
 -- function to fire an event in a specific number of seconds
@@ -115,10 +107,6 @@ function coreevent.Run()
 		["turtle_inventory"]	= true,
 		["turtle_response"]		= true,
 	}
-
-	-- run functions when event is (about to be) ready
-	for i, func in ipairs(eventready) do func() end
-	eventready = {}
 
 	-- this function never stops as long as we have any function that could take action (or the display is active, so the human could start something)
 	-- dit gaat niet werken nu, moet nog aangepast worden !!!
