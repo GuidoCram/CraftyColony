@@ -36,9 +36,6 @@ local CoreEvent = {}
 -- allemaal event spullen
 local db = {
 
-    -- keep a list of the known timers
-    timers			= {},		        -- list of all known timers
-
 	-- keep track of known listeners
 	listeners		= {},		        -- list of all known listeners
 
@@ -60,33 +57,7 @@ local db = {
 
 --]]
 
-local doTimerEvent()
-	-- todo: consider working with handlers
 
-	-- set new timer for the next tick
-	CoreEvent.CreateTimeEvent(1, doTimerEvent)
-end
-
--- local function to process a timer event
-local function processTimerEvent(id)
-
-	-- is it a known timer?
-	if db.timers[id] ~= nil then
-
-		-- retrieve the timer information
-		local timer = db.timers[id]
-		db.timers[id] = nil
-
-		-- call the callback function
-		pcall(timer.callback, timer.data)
-
-		-- timer handled, return nothing more
-		return nil
-	else
-		-- we don't know this timer, continue with the event as it was
-		return 'timer', id
-	end
-end
 
 --[[
               _     _ _
@@ -104,58 +75,32 @@ end
 function CoreEvent.init()
 end
 
--- event setup
-function CoreEvent.setup()
-
-    -- this will create a loop of one event every tick at least, I don't think this is usefull for event, maybe for messaging
-    CoreEvent.createTimeEvent(2, doTimerEvent)
-end
-
--- function to fire an event in a specific number of seconds
-function CoreEvent.createTimeEvent(ticks, callback, data)
-	-- ticks is in 1/20 seconds, so 20 ticks is 1 second
-	-- callback is the function to call when the timer expires
-	-- data is optional data to pass to the function when called
-
-	-- store the id
-	local id = os.startTimer(ticks/20)
-
-	-- add this one to our memory
-	db.timers[id] = {callback=callback, data=data, finished=os.clock() + ticks / 20}
-
-	-- return the id of the timer, in case our caller wants to clear the timer
-	return id
-end
-
--- not sure if anyone will ever cancel a timer or just let it run out
-function CoreEvent.cancelTimeEvent(id)
-	-- clear the timer in the os queue
-	os.cancelTimer(id)
-
-	-- clear the data from our memory
-	db.timers[id] = nil
-end
-
 -- to add a custom functions to the event listener
-function CoreEvent.addEventListener(func, protocol, subject)
+function CoreEvent.addEventListener(eventType, func)
 
-    -- not sure if we allow an event listeren without a subject...
-	if subject then
-	    -- add this function to the listeners (create table if needed)
-	    if type(listener[protocol]) ~= "table" then listener[protocol] = {} end
-	    listener[protocol][subject] = func
-	else
-	    -- ok, but only if there is no table present!
-		if type(listener[protocol]) ~= "table" then listener[protocol] = func end
+    -- not sure if we allow an event listener without a subject...
+	if eventType and type(eventType) == "string" then
+
+		-- create list if not yet present
+		if type(db.listeners[eventType]) ~= "table" then db.listeners[eventType] = {} end
+
+	    -- add to the list
+		table.insert(db.listeners[eventType], func)
 	end
 end
 
--- to remove the custom functions to the event listener. Without subject all functions for this protocol are cleared.
-function CoreEvent.removeEventListener(protocol, subject)
+-- to remove the custom functions to the event listener.
+function CoreEvent.removeEventListener(eventType, func)
 
-    -- check if we need to remove all from this protocol
-	if subject  then listener[protocol][subject]    = nil
-			    else listener[protocol]             = nil
+    -- check if the request is valid
+	if eventType and type(eventType) == "string" and type(db.listeners[eventType]) == "table" then
+
+		-- remove specific function from the list, walk through the list backwards to avoid issues with changing indices
+		for i = #db.listeners[eventType], 1, -1 do
+
+			-- remove if found
+			if db.listeners[eventType][i] == func then table.remove(db.listeners[eventType], i) end
+		end
 	end
 end
 
@@ -202,39 +147,35 @@ function CoreEvent.run()
 		["websocket_success"]	= true,
 	}
 
-	-- this function never stops as long as we have any function that could take action (or the display is active, so the human could start something)
-	-- dit gaat niet werken nu, moet nog aangepast worden !!!
+	-- as long we are not shutting down, we will run the main loop
 	while not db.shuttingDown do
 
         -- listen for new messages, remember the time
 		local event, p1, p2, p3, p4, p5 = os.pullEvent()
 		local now                       = os.clock()
-		local originalEvent             = event
-
-		-- todo: as a normal handler
-		if event == "timer"		    then event, p1 = ProcessTimerEvent(p1) end
-
-		-- log not ignored events
-		if not ignore[event] and db.debug then
- 			-- log to file
---			coreutils.WriteToFile(db.logfile, tostring(coreutils.UniversalTime()) .. " " .. "event = " .. event .. ", p1 = " .. (p1 or ""), "a")
-		end
 
 		-- dispatch event to the right listener
-		if      type(listener[event]) == "function"                                             then listener[event](p1, p2, p3, p4, p5)
-		elseif  type(listener[event]) == "table" and type(listener[event][p1]) == "function"    then listener[event][p1](p1, p2, p3, p4, p5)
+		if type(listener[event]) == "table" then
+
+			-- execute all listeners for this event
+			for _, func in ipairs(listener[event]) do
+				-- pcall to avoid a crash of the whole system
+				pcall(func, p1, p2, p3, p4, p5)
+			end
+
+		-- no table present means there is no listener for this event
+		else
+
+			-- only log in debug and not ignored -- todo: write to log
+			if db.debug and not ignore[event] then end
 		end
 
         -- time mesurement, to see how long this took
 		local period = os.clock() - now
 		if period > 0.16 then
-		    coredisplay.UpdateToDisplay("WARNING: "..event.." ("..(p1 or '')..") took "..period.." seconds", 5)
-		    corelog.WriteToLog("WARNING: "..event.." ("..(p1 or '')..") took "..period.." seconds")
+			-- todo: write to log
 		end
 	end
-
-	-- show we are done!
-	print("CoreEvent.Run() is complete")
 end
 
 function CoreDisk.shutdown()

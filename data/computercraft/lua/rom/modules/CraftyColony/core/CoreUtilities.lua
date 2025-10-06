@@ -1,7 +1,13 @@
--- define module
-local Timer = {}
+-- Core Utils for CraftyColony
+--
+-- collection of utility functions for CraftyColony
+-- helps handling display and user interactions
 
--- imports
+local CoreUtilities = {}
+
+-- import right into the CoreUtilities table
+CoreUtilities.Timer		= require("CraftyColony.utilities.Timer")
+CoreUtilities.Generate	= require("CraftyColony.utilities.Generate")
 
 --[[
       _                     _       _   _
@@ -14,7 +20,7 @@ local Timer = {}
                              |_|
 
 
-  This module implements a simple timer based on events.
+    This modules offers access to various utility functions used in CraftyColony.
 
 --]]
 
@@ -28,10 +34,6 @@ local Timer = {}
 
 --]]
 
-local db = {
-  timers      = {} -- table of all active timers
-}
-
 --[[
   _                 _
  | |               | |
@@ -41,8 +43,6 @@ local db = {
  |_|\___/ \___\__,_|_|
 
 --]]
-
--- no local functions
 
 --[[
               _     _ _
@@ -56,6 +56,8 @@ local db = {
 
 --]]
 
+
+
 --[[
            _
           | |
@@ -64,7 +66,8 @@ local db = {
  | | |  __/ |_| |_| | |  | | | |
  |_|  \___|\__|\__,_|_|  |_| |_|
 
+
 --]]
 
 -- done
-return queue
+return CoreUtilities
