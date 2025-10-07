@@ -74,7 +74,7 @@ function CoreCom.run()
 	end
 end
 
-function CoreCom.Shutdown()
+function CoreCom.shutdown()
 	-- just change the status, nothing more at this point. We need to wait for the work to finish
 	db.shuttingDown = true
 end

@@ -159,10 +159,10 @@ function CoreEvent.run()
 		local now                       = os.clock()
 
 		-- dispatch event to the right listener
-		if type(listener[event]) == "table" then
+		if type(db.listeners[event]) == "table" then
 
 			-- execute all listeners for this event
-			for _, func in ipairs(listener[event]) do
+			for _, func in ipairs(db.listeners[event]) do
 				-- pcall to avoid a crash of the whole system
 				pcall(func, p1, p2, p3, p4, p5)
 			end
@@ -182,7 +182,7 @@ function CoreEvent.run()
 	end
 end
 
-function CoreDisk.shutdown()
+function CoreEvent.shutdown()
     -- set the flag to stop running
     db.shuttingDown = true
 end
