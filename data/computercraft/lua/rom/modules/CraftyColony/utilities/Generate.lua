@@ -35,7 +35,7 @@ local CoreDisk = require("CraftyColony.core.CoreDisk")
 local db = {
 
 	-- is this module initialized?
-	initialized		= "no",			-- "no", "busy", "yes"
+	initialized		= false,
 
 	-- just some knowledge about us
 	me				= os.getComputerID(),
@@ -48,6 +48,19 @@ local db = {
 }
 
 --[[
+                      _       _        _       _ _
+                     | |     | |      (_)     (_) |
+  _ __ ___   ___   __| |_   _| | ___   _ _ __  _| |_
+ | '_ ` _ \ / _ \ / _` | | | | |/ _ \ | | '_ \| | __|
+ | | | | | | (_) | (_| | |_| | |  __/ | | | | | | |_
+ |_| |_| |_|\___/ \__,_|\__,_|_|\___| |_|_| |_|_|\__|
+
+--]]
+
+-- read data from disk
+CoreDisk.readFile(db.dbFilename, initCallback)
+
+--[[
   _                 _
  | |               | |
  | | ___   ___ __ _| |
@@ -56,15 +69,6 @@ local db = {
  |_|\___/ \___\__,_|_|
 
 --]]
-
-local function init()
-
-	-- read data from disk
-	CoreDisk.readFile(db.dbFilename, initCallback)
-
-	-- now we are done, just adjust the status
-	db.initialized = "busy"
-end
 
 local function initCallback(data)
 
@@ -75,7 +79,7 @@ local function initCallback(data)
 	db.lastID = data.lastID or 0
 
 	-- now we are done
-	db.initialized = "yes"
+	db.initialized = true
 end
 
 local function saveDB()
@@ -99,7 +103,7 @@ end
 function Generate.id()
 
 	-- we should be initialized
-	if db.initialized == "yes" then
+	if db.initialized then
 
 		-- increase the id
 		db.lastID = db.lastID + 1
@@ -111,13 +115,9 @@ function Generate.id()
 		return db.me..":"..db.lastID
 
 	else
-
-		-- it initialization has not been started, we will do it now
-		if db.initialized == "no" then init() end
-
 		-- generate a temporary id
 		local tempID = ""
-		for n = 1, 12 do tempID = tempID..string.char(math.random(97, 97 + 25)) end
+		for n = 1, 12 do tempID = tempID..string.char(math.random(string.byte("a"), string.byte("z"))) end
 
 		-- done
 		return db.me..":"..tempID
