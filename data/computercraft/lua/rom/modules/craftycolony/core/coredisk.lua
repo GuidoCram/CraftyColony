@@ -59,7 +59,7 @@ local function getNextOperation()
 end
 
 -- for reading files asynchronously
-local function readFileAsync(path, callback)
+local function readFile(path, callback, toTable)
 
     -- try to open the file
     local file = fs.open(path, "r")
@@ -73,12 +73,15 @@ local function readFileAsync(path, callback)
         file.close()
     end
 
+	-- if requested, deserialize into a table
+	if callback and data and toTable then data = textutils.unserialize(data) end
+
     -- call the callback function with the contents (if any)
     if callback then callback(data) end
 end
 
 -- for writing files asynchronously
-local function writeFileAsync(path, mode, data)
+local function writeFile(path, mode, data)
 
     -- check the mode. Anything else then write mode will be handled as append
     if mode ~= "w" then mode = "a" end
@@ -94,7 +97,7 @@ local function writeFileAsync(path, mode, data)
 end
 
 -- for deleting files asynchronously
-local function deleteFileAsync(path)
+local function deleteFile(path)
 
     -- check if the file exists first
     if fs.exists(path) then
@@ -139,17 +142,17 @@ function CoreDisk.run()
             if operation.operation == "read" then
 
                 -- yeah, reading a file is fun!
-                readFileAsync(operation.path, operation.callback)
+                readFile(operation.path, operation.callback, operation.table)
 
             elseif operation.operation == "write" then
 
                 -- let's write!
-                writeFileAsync(operation.path, operation.mode, operation.data)
+                writeFile(operation.path, operation.mode, operation.data)
 
             elseif operation.operation == "delete" then
 
                 -- let's delete!
-                deleteFileAsync(operation.path)
+                deleteFile(operation.path)
             end
         else
             -- currently nothing to do, just sleep a bit
@@ -162,14 +165,33 @@ end
 function CoreDisk.readFile(path, callback)
 
     -- handle later
-    table.insert(db.operationQueue, {operation="read", path=path, callback=callback})
+    table.insert(db.operationQueue, {operation="read", path=path, callback=callback, table=false})
+end
+
+function CoreDisk.readFileIntoTable(path, callback)
+
+    -- handle later
+    table.insert(db.operationQueue, {operation="read", path=path, callback=callback, table=true})
 end
 
 -- Writes data to a file on disk async (overwrites existing)
 function CoreDisk.writeFile(path, data)
 
+	-- check input
+	if type(data) ~= "string" and type(data) ~= "number" then error("Invalid data: expected string or number") end
+
     -- handle later
     table.insert(db.operationQueue, {operation="write", path=path, mode="w", data=data})
+end
+
+-- writes table to a file on disk async (overwrites existing)
+function CoreDisk.writeTableToFile(path, data)
+
+	-- check input
+	if type(data) ~= "table" then error("Invalid data: expected table")	end
+
+    -- handle later using serialization and other function
+    CoreDisk.writeFile(path, textutils.serialize(data))
 end
 
 -- Appends data to a file on disk async
@@ -177,6 +199,16 @@ function CoreDisk.appendFile(path, data)
 
     -- handle later
     table.insert(db.operationQueue, {operation="write", path=path, mode="a", data=data})
+end
+
+-- Appends table to a file on disk async
+function CoreDisk.appendTableToFile(path, data)
+
+	-- check input
+	if type(data) ~= "table" then error("Invalid data: expected table")	end
+
+	-- handle later
+    CoreDisk.appendFile(path, textutils.serialize(data))
 end
 
 -- Checks if a file exists

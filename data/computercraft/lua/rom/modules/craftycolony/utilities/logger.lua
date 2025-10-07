@@ -17,6 +17,10 @@ local CoreDisk = require("core.coredisk")
 
 
 	This module implements some simple logging actions, for uniform logging.
+	-- log
+	-- warning
+	-- error
+	-- debug
 
 --]]
 
@@ -32,14 +36,14 @@ local CoreDisk = require("core.coredisk")
 
 local db = {
 
-	-- is this module initialized?
-	initialized		= "no",			-- "no", "busy", "yes"
-
 	-- just some knowledge about us
-	me				= os.getComputerID(),
+	me					= string.format("%02d", os.getComputerID()),
 
 	-- this is where we keep our data on disk
-	dbFilename		= "/CraftyColony/LoggerDB.json",
+	logFilename			= "/log/mainLog.txt",
+	warningFilename		= "/log/warningLog.txt",
+	errorFilename		= "/log/errorLog.txt",
+	debugFilename		= "/log/debugLog.txt",
 }
 
 --[[
@@ -66,6 +70,51 @@ local db = {
 
 --]]
 
+function Logger.log(message)
+
+	-- prepend with timestamp and computer ID
+	local logMessage = "[" .. os.date("%H:%M:%S") .. "][" .. db.me .. "] " .. message .. "\n"
+
+	-- write to log file
+	CoreDisk.appendToFile(db.logFilename, logMessage)
+
+end
+
+function Logger.warning(message)
+
+	-- prepend with timestamp and computer ID
+	local logMessage = "[" .. os.date("%H:%M:%S") .. "][" .. db.me .. "] " .. message .. "\n"
+
+	-- also print to console
+	print('Warning: ' .. logMessage)
+
+	-- write to warning log file
+	CoreDisk.appendToFile(db.warningFilename, logMessage)
+
+end
+
+function Logger.error(message)
+
+	-- prepend with timestamp and computer ID
+	local logMessage = "[" .. os.date("%H:%M:%S") .. "][" .. db.me .. "] " .. message .. "\n"
+
+	-- also print to console
+	print('Error: ' .. logMessage)
+
+	-- write to error log file
+	CoreDisk.appendToFile(db.errorFilename, logMessage)
+
+end
+
+function Logger.debug(message)
+
+	-- prepend with timestamp and computer ID
+	local logMessage = "[" .. os.date("%H:%M:%S") .. "][" .. db.me .. "] " .. message .. "\n"
+
+	-- write to debug log file
+	CoreDisk.appendToFile(db.debugFilename, logMessage)
+
+end
 
 --[[
            _
