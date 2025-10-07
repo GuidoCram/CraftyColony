@@ -75,6 +75,10 @@ local db = {
 function CoreEvent.init()
 end
 
+-- setup of core event
+function CoreEvent.setup()
+end
+
 -- to add a custom functions to the event listener
 function CoreEvent.addEventListener(eventType, func)
 
