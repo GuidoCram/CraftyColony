@@ -97,23 +97,6 @@ local function runCallback()
     CoreSystem.shutdown()
 end
 
--- initiates the shutdown of the system
-local function shutdown()
-
-    -- only if we are running
-    if db.status ~= "running" then return end
-
-    -- set the new status
-    db.status = "shutting down"
-
-    -- run all shutdown functions
-    CoreAction.shutdown()
-    CoreCom.shutdown()
-    CoreDisk.shutdown()
-    CoreEvent.shutdown()
-    CoreUI.shutdown()
-end
-
 --[[
               _     _ _
              | |   | (_)
@@ -157,6 +140,23 @@ function CoreSystem.run(callback)
         -- no longer running, we're done (unless the system is shutting down)
 		if db.status == "running" then db.status = "ready" end
     end
+end
+
+-- initiates the shutdown of the system
+function CoreSystem.shutdown()
+
+    -- only if we are running
+    if db.status ~= "running" then return end
+
+    -- set the new status
+    db.status = "shutting down"
+
+    -- run all shutdown functions
+    CoreAction.shutdown()
+    CoreCom.shutdown()
+    CoreDisk.shutdown()
+    CoreEvent.shutdown()
+    CoreUI.shutdown()
 end
 
 --[[
