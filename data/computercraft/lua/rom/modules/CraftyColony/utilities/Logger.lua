@@ -1,5 +1,5 @@
 -- define module
-local Generate = {}
+local Logger = {}
 
 -- imports
 
@@ -16,7 +16,7 @@ local CoreDisk = require("CraftyColony.core.CoreDisk")
                              |_|
 
 
-  This module implements some generative functions, like unique id generation.
+	This module implements some simple logging actions, for uniform logging.
 
 --]]
 
@@ -38,11 +38,8 @@ local db = {
 	-- just some knowledge about us
 	me				= os.getComputerID(),
 
-	-- keep track of the last used id
-	lastID			= 0,				-- last used id
-
 	-- this is where we keep our data on disk
-	dbFilename		= "/CraftyColony/GenerateDB.json",
+	dbFilename		= "/CraftyColony/LoggerDB.json",
 }
 
 --[[
@@ -55,32 +52,7 @@ local db = {
 
 --]]
 
-local function init()
 
-	-- read data from disk
-	CoreDisk.readFile(db.dbFilename, initCallback)
-
-	-- now we are done, just adjust the status
-	db.initialized = "busy"
-end
-
-local function initCallback(data)
-
-	-- if we have data, then
-	if not data or type(data) ~= "table" then data = {} end
-
-	-- use the data from disk
-	db.lastID = data.lastID or 0
-
-	-- now we are done
-	db.initialized = "yes"
-end
-
-local function saveDB()
-
-	-- save the database to disk, asynchronously
-	CoreDisk.writeFile(db.dbFilename, data)
-end
 
 --[[
               _     _ _
@@ -94,33 +66,6 @@ end
 
 --]]
 
-function Generate.id()
-
-	-- we should be initialized
-	if db.initialized == "yes" then
-
-		-- increase the id
-		db.lastID = db.lastID + 1
-
-		-- save the database
-		saveDB()
-
-		-- return the new id
-		return db.me..":"..db.lastID
-
-	else
-
-		-- it initialization has not been started, we will do it now
-		if db.initialized == "no" then init() end
-
-		-- generate a temporary id
-		local tempID = ""
-		for n = 1, 12 do tempID = tempID..string.char(math.random(97, 97 + 25)) end
-
-		-- done
-		return db.me..":"..tempID
-	end
-end
 
 --[[
            _
@@ -133,4 +78,4 @@ end
 --]]
 
 -- done
-return Generate
+return Logger
