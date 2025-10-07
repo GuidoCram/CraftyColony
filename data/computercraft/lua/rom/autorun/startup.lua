@@ -4,7 +4,12 @@ package.path = package.path..";/rom/modules/craftycolony/?;/rom/modules/craftyco
 -- import crafty colony CoreSystem
 local CoreSystem = require "core.coresystem"
 
--- local ccwp = require "ccwp"
+local function dummyCallback()
+	print("Callback function executed.")
+end
+
+-- let's go
+CoreSystem.run(dummyCallback)
 
 -- ccwp.Init()
 -- ccwp.Startup()
