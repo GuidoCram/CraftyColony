@@ -126,10 +126,10 @@ end
 --]]
 
 -- actually run the stuff
-function CoreSystem.Run(callback)
+function CoreSystem.run(callback)
 
     -- check if the callback is a function
-    if callback and type(callback) ~= "function" then error("CoreSystem.Run: callback is not a function") end
+    if callback and type(callback) ~= "function" then error("CoreSystem.run: callback is not a function") end
 
     -- save the callback
     db.callback = callback
