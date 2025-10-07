@@ -16,9 +16,7 @@ local CoreDisk = require("CraftyColony.core.CoreDisk")
                              |_|
 
 
-  This module implements a simple timer based events based on CoreEvents.
-  -- time based events, have your callback called in x seconds
-  -- ticker events, create every x seconds an event to keep stuff going
+  This module implements some generative functions, like unique id generation.
 
 --]]
 
