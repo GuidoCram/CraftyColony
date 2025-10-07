@@ -3,7 +3,7 @@ local Logger = {}
 
 -- imports
 
-local CoreDisk = require("CraftyColony.core.CoreDisk")
+local CoreDisk = require("core.coredisk")
 
 --[[
       _                     _       _   _

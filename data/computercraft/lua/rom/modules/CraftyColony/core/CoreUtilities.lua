@@ -6,8 +6,8 @@
 local CoreUtilities = {}
 
 -- import right into the CoreUtilities table
-CoreUtilities.Timer		= require("CraftyColony.utilities.Timer")
-CoreUtilities.Generate	= require("CraftyColony.utilities.Generate")
+CoreUtilities.Timer		= require("utilities.timer")
+CoreUtilities.Generate	= require("utilities.generate")
 
 --[[
       _                     _       _   _

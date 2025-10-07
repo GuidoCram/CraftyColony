@@ -6,7 +6,7 @@
 local CoreEvent = {}
 
 -- imports
-
+local CoreDisk = require("core.coredisk")
 
 --[[
       _                     _       _   _

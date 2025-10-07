@@ -1,12 +1,12 @@
 -- define module
-local CoreSystemtem = {}
+local CoreSystem = {}
 
 -- imports
-local CoreAction    = require "CoreAction"
-local CoreCom       = require "CoreCom"
-local CoreDisk      = require "CoreDisk"
-local CoreEvent     = require "CoreEvent"
-local CoreUI        = require "CoreUI"
+local CoreAction    = require "core.coreaction"
+local CoreCom       = require "core.corecom"
+local CoreDisk      = require "core.coredisk"
+local CoreEvent     = require "core.coreevent"
+local CoreUI        = require "core.coreui"
 
 --[[
       _                     _       _   _

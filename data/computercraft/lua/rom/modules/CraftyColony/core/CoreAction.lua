@@ -91,7 +91,7 @@ function CoreAction.addActivity(func, data, priority, description)
 	-- description	the description of the activity (for debugging purposes)
 
 	-- add the function to the appropriate queue based on priority
-		if not db.acceptingWork then return end
+		if not db.acceptingWork then return
 	elseif priority == "high"	then table.insert(db.highQueue, 	{ func = func, data = data, description = description })
 	elseif priority == "low"	then table.insert(db.lowQueue, 		{ func = func, data = data, description = description })
 								else table.insert(db.normalQueue,	{ func = func, data = data, description = description })

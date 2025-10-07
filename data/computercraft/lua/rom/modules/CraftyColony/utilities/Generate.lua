@@ -3,7 +3,7 @@ local Generate = {}
 
 -- imports
 
-local CoreDisk = require("CraftyColony.core.CoreDisk")
+local CoreDisk = require("core.coredisk")
 
 --[[
       _                     _       _   _
@@ -42,7 +42,7 @@ local db = {
 	lastID			= 0,				-- last used id
 
 	-- this is where we keep our data on disk
-	dbFilename		= "/CraftyColony/GenerateDB.json",
+	dbFilename		= "/craftycolony/generatedb.json",
 }
 
 --[[
