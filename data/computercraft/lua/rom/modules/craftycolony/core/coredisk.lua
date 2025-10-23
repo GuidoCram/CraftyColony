@@ -87,6 +87,9 @@ end
 -- for writing files now
 local function writeFileSync(path, mode, data)
 
+	-- check the data, serialize if needed
+	if type(data) == "table" then data = textutils.serialize(data) end
+
     -- check the mode. Anything else then write mode will be handled as append
     if mode ~= "w" then mode = "a" end
 
