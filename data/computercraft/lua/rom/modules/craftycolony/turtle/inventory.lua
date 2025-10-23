@@ -41,7 +41,8 @@ local db = {
 
 	-- last known slots snapshot: [1..16] = itemDetail|nil
 	slots      = {},
-	lastScan   = nil, -- os.clock() timestamp
+	lastScan   = nil, 	-- os.epoch() / 3600 timestamp (ticks since the Minecraft game is created)
+	detailed   = false, -- whether the last scan was detailed or not
 }
 
 --[[
@@ -64,7 +65,9 @@ local db = {
 
 --]]
 
+-- init of this module, reading data from CoreData
 local function init()
+
 	-- restore cached snapshot if present (optional)
 	local data = CoreData.getData(db.moduleName)
 	if type(data) == "table" then
@@ -74,14 +77,62 @@ local function init()
 	db.initialized = true
 end
 
+-- saves the database to CoreData
 local function saveDB()
 	CoreData.setData(db.moduleName, { slots = db.slots, lastScan = db.lastScan })
 end
 
-local function ensure()
+-- Perform an inventory scan, optionally detailed
+-- returns a shallow copy of the slots table
+local function scan(detailed)
+
+	-- no ensure here, since this is called by ensure
+
+	-- convert detailed to boolean
+	detailed = detailed and true or false
+
+	-- scan slot by slot
+	local slots = {}
+	for slot = 1, 16 do
+
+		-- get the details
+		local detail = turtle.getItemDetail(slot, detailed)
+		if detail then
+
+			-- normalize fields we rely on
+			slots[slot] = {
+
+				-- always available
+				name        = detail.name,
+				count       = detail.count,
+
+				-- only when detailed is true, and maybe not even then
+				damage		= detail.damage,
+				displayName	= detail.displayName,
+				maxCount	= detail.maxCount,
+			}
+		else
+
+			-- nothing in this slot
+			slots[slot] = nil
+		end
+	end
+
+	-- store snapshot
+	db.slots	= slots
+	db.lastScan = os.epoch() / 3600 -- timestamp in ticks since the Minecraft game is created
+	db.detailed = detailed
+	saveDB()
+end
+
+-- easy ensure function used by other functions
+function ensure(rescan, detailed)
 	if not turtle then error("Inventory: turtle API not available") end
 	if not db.initialized then init() end
+
+	if rescan or not db.lastScan then scan(detailed) end
 end
+
 
 --[[
               _     _ _
@@ -95,102 +146,116 @@ end
 
 --]]
 
--- Perform an inventory scan, optionally detailed
--- returns a shallow copy of the slots table
-function Inventory.scan(detailed)
-	ensure()
 
-	local slots = {}
+-- find an empty slot
+-- returns true if successfull, false if not found
+function Inventory.selectEmpty(rescan)
+
+	-- to be sure we're ready
+	ensure(rescan, false)
+
+	-- loop the slots looking for empty slot
 	for slot = 1, 16 do
-		local detail = turtle.getItemDetail(slot, detailed and true or false)
-		if detail then
-			-- Normalize fields we rely on
-			slots[slot] = {
-				name        = detail.name,
-				count       = detail.count,
-				displayName = detail.displayName,
-				damage      = detail.damage, -- may be nil on some versions
-			}
-		else
-			slots[slot] = nil
+
+		-- check empty
+		if not db.slots[slot] then
+
+			-- select and return
+			turtle.select(slot)
+			return true
 		end
 	end
 
-	-- store snapshot
-	db.slots = slots
-	db.lastScan = os.clock()
+	-- no empty slot found
+	return false
+end
+
+-- select any slot containing the item by name;
+-- returns true if successfull, false if not found
+function Inventory.selectItem(name, rescan)
+
+	-- to be sure we're ready
+	ensure(rescan, false)
+
+	-- loop the slots looking for empty slot
+	for slot = 1, 16 do
+
+		-- check for name match
+		if db.slots[slot].name == name then
+
+			-- select and return
+			turtle.select(slot)
+			return true
+		end
+	end
+
+	-- item not found
+	return false
+end
+
+-- get a list of items with their counts
+-- returns table: itemName = count
+function Inventory.getItemCounts(rescan)
+
+	-- to be sure we're ready
+	ensure(rescan, false)
+
+	-- build counts table
+	local counts = {}
+	for slot = 1, 16 do
+
+		-- get the details of this slot
+		local detail = db.slots[slot]
+
+		-- check for item detail
+		if type(detail) == "table" and type(detail.name) == "string" and detail.name then counts[detail.name] = (counts[detail.name] or 0) + detail.count end
+	end
+
+	-- done
+	return counts
+end
+
+-- organize the inventory by grouping items together
+function Inventory.organize(rescan)
+
+	-- to be sure we're ready (always rescan if we lack detailed data)
+	ensure(rescan or db.detailed == false, true)
+
+	-- just move everything to the back, ignore errors
+	for source = 1, 15 do
+
+		-- anything in this slot?
+		if db.slots[source] and db.slots[source].count then
+
+			-- transfer to whatever is allowed
+			for target = 16, source + 1, -1 do
+
+				-- check if we can transfer to this slot, then transfer the maximum possible
+				if not db.slots[target] or (db.slots[target].name == db.slots[source].name and db.slots[target].count < db.slots[target].maxCount) then
+
+					-- if we have no target, that is bad so we better prevent that by adding it with count 0
+					if not db.slots[target] then db.slots[target] = { name = db.slots[source].name, count = 0, maxCount = db.slots[source].maxCount } end
+
+					-- calc amount to transfer
+					local amount = math.min( db.slots[source].count, db.slots[source].maxCount - db.slots[target].count )
+
+					-- actually transfer the items
+					if turtle.getSelectedSlot() ~= source then turtle.select(source) end
+					turtle.transferTo(target, amount)
+
+					-- update target
+					db.slots[target].count	= db.slots[target].count + amount
+
+					-- update source
+					db.slots[source].count = db.slots[source].count - amount
+					if db.slots[source].count <= 0 then db.slots[source] = nil break end
+				end
+			end
+		end
+	end
+
+	-- save the database
 	saveDB()
-
-	-- return copy
-	local copy = {}
-	for i = 1, 16 do copy[i] = slots[i] end
-	return copy
-end
-
--- get last known snapshot (may be stale)
-function Inventory.getSlots()
-	if not db.initialized then init() end
-	local copy = {}
-	for i = 1, 16 do copy[i] = db.slots[i] end
-	return copy
-end
-
-function Inventory.getSlot(slot)
-	if not db.initialized then init() end
-	if type(slot) ~= "number" or slot % 1 ~= 0 or slot < 1 or slot > 16 then error("Inventory.getSlot: invalid slot") end
-	return db.slots[slot]
-end
-
--- find first slot containing an item with the exact name
-function Inventory.findFirstByName(name, rescan)
-	ensure()
-	if rescan or not db.lastScan then Inventory.scan(false) end
-	for slot = 1, 16 do
-		local it = db.slots[slot]
-		if it and it.name == name then return slot, it.count end
-	end
-	return nil, 0
-end
-
--- find all slots for a name; returns { {slot, count}, ... }, totalCount
-function Inventory.findAllByName(name, rescan)
-	ensure()
-	if rescan or not db.lastScan then Inventory.scan(false) end
-	local results = {}
-	local total = 0
-	for slot = 1, 16 do
-		local it = db.slots[slot]
-		if it and it.name == name then
-			table.insert(results, { slot = slot, count = it.count })
-			total = total + (it.count or 0)
-		end
-	end
-	return results, total
-end
-
--- total count of an item name
-function Inventory.totalCount(name, rescan)
-	local _, total = Inventory.findAllByName(name, rescan)
-	return total
-end
-
--- find first empty slot
-function Inventory.firstEmptySlot(rescan)
-	ensure()
-	if rescan or not db.lastScan then Inventory.scan(false) end
-	for slot = 1, 16 do
-		if not db.slots[slot] then return slot end
-	end
-	return nil
-end
-
--- select first slot containing the item by name; returns slot or false,err
-function Inventory.selectFirstByName(name, rescan)
-	ensure()
-	local slot = select(1, Inventory.findFirstByName(name, rescan))
-	if not slot then return false, "item not found: " .. tostring(name) end
-	turtle.select(slot)
-	return slot
 end
 
 --[[
