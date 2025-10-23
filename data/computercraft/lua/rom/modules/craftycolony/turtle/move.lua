@@ -124,38 +124,24 @@ function Move.forward(steps)
 	steps = steps or 1
 	steps = math.max(1, math.floor(steps + 0.5))
 
+	-- check fuel level?
+	if turtle.getFuelLevel() < steps then error("Move.forward: not enough fuel to move "..steps.." steps") end
+
 	-- step by step
 	for i = 1, steps do
 
 		-- try to move forward
 		local success, err = turtle.forward()
-		
-		if not success then
-			error("Move.forward: unable to move forward at step "..i..": "..tostring(err))
-		end
+
+		-- should be done better one day...
+		if not success then error("Move.forward: unable to move forward at step "..i..": "..tostring(err)) end
 
 		-- update location
-		db.location = Location.move(db.location, db.direction, 1)
+		db.location = Location.forward(db.location, db.direction, 1)
 
 		-- save the database
 		saveDB()
 	end
-
-	-- actually move the turtle
-	if turtle and turtle.forward then
-		for i = 1, steps do
-			turtle.forward()
-		end
-	end
-
-	-- update location
-	db.location = Location.move(db.location, db.direction, steps)
-
-	-- save the database
-	saveDB()
-
-	-- done
-	return db.location
 end
 
 --[[
