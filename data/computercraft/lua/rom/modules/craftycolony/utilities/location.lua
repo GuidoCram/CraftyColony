@@ -93,8 +93,8 @@ end
 
 function Location.forward(location, direction, n)
 	n = n or 1
-	location.x = location.x + direction.x * n
-	location.y = location.y + direction.y * n
+	location.x = location.x + direction.dx * n
+	location.y = location.y + direction.dy * n
 	return location
 end
 
