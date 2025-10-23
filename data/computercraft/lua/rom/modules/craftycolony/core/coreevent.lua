@@ -6,7 +6,7 @@
 local CoreEvent = {}
 
 -- imports
-local CoreDisk = require("core.coredisk")
+local CoreDisk = require("craftycolony.core.coredisk")
 
 --[[
       _                     _       _   _

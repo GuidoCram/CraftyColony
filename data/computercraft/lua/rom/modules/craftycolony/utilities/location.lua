@@ -1,16 +1,9 @@
--- Core Utils for CraftyColony
---
--- collection of utility functions for CraftyColony
--- helps handling display and user interactions
+-- define module
+local Location = {}
 
-local CoreUtilities = {}
+-- imports
 
--- import right into the CoreUtilities table
-CoreUtilities.Direction	= require("craftycolony.utilities.direction")
-CoreUtilities.Generate	= require("craftycolony.utilities.generate")
-CoreUtilities.Location	= require("craftycolony.utilities.location")
-CoreUtilities.Logger	= require("craftycolony.utilities.logger")
-CoreUtilities.Timer		= require("craftycolony.utilities.timer")
+local CoreDisk = require("craftycolony.core.coredisk")
 
 --[[
       _                     _       _   _
@@ -23,7 +16,7 @@ CoreUtilities.Timer		= require("craftycolony.utilities.timer")
                              |_|
 
 
-    This modules offers access to various utility functions used in CraftyColony.
+  This module implements the use of the location object, holding x, y and z coordinates.
 
 --]]
 
@@ -37,6 +30,15 @@ CoreUtilities.Timer		= require("craftycolony.utilities.timer")
 
 --]]
 
+local db = {
+
+	-- is this module initialized?
+--	initialized		= true,
+
+	-- this is where we keep our data on disk
+--	dbFilename		= "/craftycolony/locationdb.json",
+}
+
 --[[
   _                 _
  | |               | |
@@ -46,6 +48,8 @@ CoreUtilities.Timer		= require("craftycolony.utilities.timer")
  |_|\___/ \___\__,_|_|
 
 --]]
+
+
 
 --[[
               _     _ _
@@ -59,7 +63,40 @@ CoreUtilities.Timer		= require("craftycolony.utilities.timer")
 
 --]]
 
+function Location.new(x, y, z)
+	return {
+		x = x or 0,
+		y = y or 0,
+		z = z or 0
+	}
+end
 
+function Location.clone(location)
+	return Location.new(location.x, location.y, location.z)
+end
+
+function Location.equals(loc1, loc2)
+	return loc1.x == loc2.x and loc1.y == loc2.y and loc1.z == loc2.z
+end
+
+function Location.up(location, n)
+	n = n or 1
+	location.z = location.z + n
+	return location
+end
+
+function Location.down(location, n)
+	n = n or 1
+	location.z = location.z - n
+	return location
+end
+
+function Location.forward(location, direction, n)
+	n = n or 1
+	location.x = location.x + direction.x * n
+	location.y = location.y + direction.y * n
+	return location
+end
 
 --[[
            _
@@ -69,8 +106,7 @@ CoreUtilities.Timer		= require("craftycolony.utilities.timer")
  | | |  __/ |_| |_| | |  | | | |
  |_|  \___|\__|\__,_|_|  |_| |_|
 
-
 --]]
 
 -- done
-return CoreUtilities
+return Location

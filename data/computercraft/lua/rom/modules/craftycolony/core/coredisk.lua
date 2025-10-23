@@ -33,6 +33,7 @@ local db = {
     -- queue for disk operations
     readQueue       = {},           -- reading has priority over writing
     writeQueue      = {},           -- writing has no harm in queueing
+    deleteQueue     = {},           -- deleting has lowest priority
 
     -- local status of shutting down
 	shuttingDown	= false,
@@ -50,16 +51,17 @@ local db = {
 
 local function getNextOperation()
     -- something to read or write?
-        if #db.readQueue  > 0 then return table.remove(db.readQueue, 1)
-    elseif #db.writeQueue > 0 then return table.remove(db.writeQueue, 1)
+    	if #db.readQueue	> 0 then return table.remove(db.readQueue, 1)
+    elseif #db.writeQueue	> 0 then return table.remove(db.writeQueue, 1)
+    elseif #db.deleteQueue	> 0 then return table.remove(db.deleteQueue, 1)
     end
 
     -- still here, no operation
     return nil
 end
 
--- for reading files asynchronously
-local function readFile(path, callback, toTable)
+-- for reading files now
+local function readFileSync(path, callback, toTable) -- (path: string, callback: function, toTable: boolean)
 
     -- try to open the file
     local file = fs.open(path, "r")
@@ -74,14 +76,16 @@ local function readFile(path, callback, toTable)
     end
 
 	-- if requested, deserialize into a table
-	if callback and data and toTable then data = textutils.unserialize(data) end
+	if data and toTable then data = textutils.unserialize(data) end
 
     -- call the callback function with the contents (if any)
-    if callback then callback(data) end
+    if callback then callback(data)
+				else return data
+	end
 end
 
--- for writing files asynchronously
-local function writeFile(path, mode, data)
+-- for writing files now
+local function writeFileSync(path, mode, data)
 
     -- check the mode. Anything else then write mode will be handled as append
     if mode ~= "w" then mode = "a" end
@@ -96,8 +100,8 @@ local function writeFile(path, mode, data)
     end
 end
 
--- for deleting files asynchronously
-local function deleteFile(path)
+-- for deleting files now
+local function deleteFileSync(path)
 
     -- check if the file exists first
     if fs.exists(path) then
@@ -142,17 +146,17 @@ function CoreDisk.run()
             if operation.operation == "read" then
 
                 -- yeah, reading a file is fun!
-                readFile(operation.path, operation.callback, operation.table)
+                readFileSync(operation.path, operation.callback, operation.table)
 
             elseif operation.operation == "write" then
 
                 -- let's write!
-                writeFile(operation.path, operation.mode, operation.data)
+                writeFileSync(operation.path, operation.mode, operation.data)
 
             elseif operation.operation == "delete" then
 
                 -- let's delete!
-                deleteFile(operation.path)
+                deleteFileSync(operation.path)
             end
         else
             -- currently nothing to do, just sleep a bit
@@ -165,13 +169,13 @@ end
 function CoreDisk.readFile(path, callback)
 
     -- handle later
-    table.insert(db.operationQueue, {operation="read", path=path, callback=callback, table=false})
+    table.insert(db.readQueue, {operation="read", path=path, callback=callback, table=false})
 end
 
 function CoreDisk.readFileIntoTable(path, callback)
 
     -- handle later
-    table.insert(db.operationQueue, {operation="read", path=path, callback=callback, table=true})
+    table.insert(db.readQueue, {operation="read", path=path, callback=callback, table=true})
 end
 
 -- Writes data to a file on disk async (overwrites existing)
@@ -181,7 +185,7 @@ function CoreDisk.writeFile(path, data)
 	if type(data) ~= "string" and type(data) ~= "number" then error("Invalid data: expected string or number") end
 
     -- handle later
-    table.insert(db.operationQueue, {operation="write", path=path, mode="w", data=data})
+    table.insert(db.writeQueue, {operation="write", path=path, mode="w", data=data})
 end
 
 -- writes table to a file on disk async (overwrites existing)
@@ -190,7 +194,7 @@ function CoreDisk.writeTableToFile(path, data)
 	-- check input
 	if type(data) ~= "table" then error("Invalid data: expected table")	end
 
-    -- handle later using serialization and other function
+    -- handle later, now just serialization
     CoreDisk.writeFile(path, textutils.serialize(data))
 end
 
@@ -198,7 +202,7 @@ end
 function CoreDisk.appendFile(path, data)
 
     -- handle later
-    table.insert(db.operationQueue, {operation="write", path=path, mode="a", data=data})
+    table.insert(db.writeQueue, {operation="write", path=path, mode="a", data=data})
 end
 
 -- Appends table to a file on disk async
@@ -220,12 +224,19 @@ end
 function CoreDisk.delete(path)
 
     -- handle later
-    table.insert(db.operationQueue, {operation="delete", path=path})
+    table.insert(db.deleteQueue, {operation="delete", path=path})
 end
 
 function CoreDisk.shutdown()
     -- set the flag to stop running
     db.shuttingDown = true
+end
+
+-- DO NOT USE THIS FUNCTION DIRECTLY, USE THE CoreDisk INTERFACE ABOVE!!
+function CoreDisk.loadTableSync(path)
+
+	-- just call the sync function, no callback
+	return readFileSync(path, nil, true)
 end
 
 --[[

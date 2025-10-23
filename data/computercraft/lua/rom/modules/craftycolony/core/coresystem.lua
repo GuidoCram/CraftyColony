@@ -2,11 +2,12 @@
 local CoreSystem = {}
 
 -- imports
-local CoreAction    = require "core.coreaction"
-local CoreCom       = require "core.corecom"
-local CoreDisk      = require "core.coredisk"
-local CoreEvent     = require "core.coreevent"
-local CoreUI        = require "core.coreui"
+local CoreAction    = require("craftycolony.core.coreaction")
+local CoreCom       = require("craftycolony.core.corecom")
+local CoreData      = require("craftycolony.core.coredata")
+local CoreDisk      = require("craftycolony.core.coredisk")
+local CoreEvent     = require("craftycolony.core.coreevent")
+local CoreUI        = require("craftycolony.core.coreui")
 
 --[[
       _                     _       _   _
@@ -61,6 +62,7 @@ local function init()
    	-- run all init functions
     CoreAction.init()
     CoreCom.init()
+    CoreData.init()
     CoreDisk.init()
     CoreEvent.init()
     CoreUI.init()
@@ -72,12 +74,13 @@ end
 -- setup all core modules
 local function setup()
 	-- only if the system is just booted
-    if db.status == "booted"		then Init() end
+    if db.status == "booted"		then init() end
 	if db.status ~= "initialized"	then return end
 
 	-- run all setup functions
     CoreAction.setup()
     CoreCom.setup()
+    CoreData.setup()
     CoreDisk.setup()
     CoreEvent.setup()
     CoreUI.setup()
@@ -131,10 +134,11 @@ function CoreSystem.run(callback)
     	parallel.waitForAll(
 			CoreAction.run,
 			CoreCom.run,
+			CoreData.run,
 			CoreDisk.run,
 			CoreEvent.run,
 			CoreUI.run,
-            runCallback
+            runCallback			-- this local function will run the callback from the parameter and initiate shutdown when that callback is done
 		)
 
         -- no longer running, we're done (unless the system is shutting down)
@@ -151,9 +155,13 @@ function CoreSystem.shutdown()
     -- set the new status
     db.status = "shutting down"
 
+	-- forget the callback
+	db.callback = nil
+
     -- run all shutdown functions
     CoreAction.shutdown()
     CoreCom.shutdown()
+    CoreData.shutdown()
     CoreDisk.shutdown()
     CoreEvent.shutdown()
     CoreUI.shutdown()

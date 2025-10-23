@@ -3,7 +3,7 @@ local Timer = {}
 
 -- imports
 
-local CoreEvent = require("core.coreevent")
+local CoreEvent = require("craftycolony.core.coreevent")
 
 --[[
       _                     _       _   _

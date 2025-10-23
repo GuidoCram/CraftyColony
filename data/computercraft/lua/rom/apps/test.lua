@@ -14,12 +14,12 @@ for n=1,3 do
 
 	turtle.digUp()
 	turtle.up()
-	turtle.turnRight()
-	turtle.dig()
-	turtle.turnRight()
-	turtle.turnRight()
+	turtle.turnLeft()
 	turtle.dig()
 	turtle.turnLeft()
+	turtle.turnLeft()
+	turtle.dig()
+	turtle.turnRight()
 
 	for n=1,60 do
 		turtle.dig()
