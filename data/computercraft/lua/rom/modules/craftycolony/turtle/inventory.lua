@@ -41,7 +41,7 @@ local db = {
 
 	-- last known slots snapshot: [1..16] = itemDetail|nil
 	slots      = {},
-	lastScan   = nil, 	-- os.epoch() / 3600 timestamp (ticks since the Minecraft game is created)
+	lastScan   = 0, 	-- os.epoch() / 3600 timestamp (ticks since the Minecraft game is created)
 	detailed   = false, -- whether the last scan was detailed or not
 }
 
@@ -70,23 +70,26 @@ local function init()
 
 	-- restore cached snapshot if present (optional)
 	local data = CoreData.getData(db.moduleName)
-	if type(data) == "table" then
-		if type(data.slots) == "table" then db.slots = data.slots end
-		if type(data.lastScan) == "number" then db.lastScan = data.lastScan end
-	end
+
+	-- check the data
+	if type(data) == "table" and type(data.slots)    == "table"   then db.slots    = data.slots    end
+	if type(data) == "table" and type(data.lastScan) == "number"  then db.lastScan = data.lastScan end
+	if type(data) == "table" and type(data.detailed) == "boolean" then db.detailed = data.detailed end
+
+	-- if we found anything or not, we're initialized
 	db.initialized = true
 end
 
 -- saves the database to CoreData
 local function saveDB()
-	CoreData.setData(db.moduleName, { slots = db.slots, lastScan = db.lastScan })
+
+	-- just send the relevant fields to CoreData
+	CoreData.setData(db.moduleName, { slots = db.slots, lastScan = db.lastScan, detailed = db.detailed })
 end
 
 -- Perform an inventory scan, optionally detailed
 -- returns a shallow copy of the slots table
 local function scan(detailed)
-
-	-- no ensure here, since this is called by ensure
 
 	-- convert detailed to boolean
 	detailed = detailed and true or false
@@ -122,15 +125,22 @@ local function scan(detailed)
 	db.slots	= slots
 	db.lastScan = os.epoch() / 3600 -- timestamp in ticks since the Minecraft game is created
 	db.detailed = detailed
+
+	-- save the database
 	saveDB()
 end
 
 -- easy ensure function used by other functions
 function ensure(rescan, detailed)
+
+	-- ensure turtle is calling this function
 	if not turtle then error("Inventory: turtle API not available") end
+
+	-- ensure initialized
 	if not db.initialized then init() end
 
-	if rescan or not db.lastScan then scan(detailed) end
+	-- rescan if requested
+	if rescan then scan(detailed) end
 end
 
 
@@ -164,6 +174,17 @@ function Inventory.selectEmpty(rescan)
 			turtle.select(slot)
 			return true
 		end
+	end
+
+	-- hmm, we should organize and try again
+	Inventory.organize(false) -- no need to rescan here, we just did that if it was requested
+
+	-- after organizing, if there is an empty slot, it will be slot 1
+	if not db.slots[1] then
+
+		-- select and return
+		turtle.select(1)
+		return true
 	end
 
 	-- no empty slot found
