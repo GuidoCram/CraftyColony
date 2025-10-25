@@ -96,6 +96,9 @@ local function runCallback()
     -- run the callback
     db.callback()
 
+	-- just wait a few ticks to let other processes finish
+	os.sleep(0.5)
+
     -- since the callback is done, we are done and we shall shut down the system!
     CoreSystem.shutdown()
 end
