@@ -8,6 +8,7 @@ package.path = package.path..";/rom/modules/?;/rom/modules/?.lua"
 local CoreSystem	= require("craftycolony.core.coresystem")
 -- local CoreUtilities	= require("craftycolony.core.coreutilities")
 local Inventory		= require("craftycolony.turtle.inventory")
+local Equiped		= require("craftycolony.turtle.equiped")
 
 
 
@@ -30,28 +31,30 @@ local function writeFileSync(path, mode, data)
     end
 end
 
-local function dummyCallback()
-	print("Callback function executed.")
+local function testCallback()
+	print("Callback function executing...")
 
-	writeFileSync("/startup_log.txt", "w", "Startup callback executed at "..os.date("%Y-%m-%d %H:%M:%S").."\n")
+	Equiped.restore({left = "minecraft:diamond_axe", 		right = "minecraft:diamond_pickaxe"})
+	Equiped.restore({left = "minecraft:diamond_pickaxe",	right = "minecraft:diamond_axe"})
 
-	local data = turtle.getItemDetail(3, true)
-	writeFileSync("/startup_log.txt", "a", "turtle.getItemDetail(3, true) -- before organize\n")
+	Equiped.free("minecraft:diamond_pickaxe")
+	Equiped.free("minecraft:diamond_axe")
+
+	Equiped.equip("minecraft:diamond_pickaxe", "minecraft:diamond_axe")
+
+--[[
+	writeFileSync("/startup_log.txt", "w", "Startup callback executed at "..os.date("%Y-%m-%d %H:%M:%S").."\n\n")
+
+	local data = turtle.getEquippedLeft()
+	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedLeft()\n")
+	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n\n")
+
+	data = turtle.getEquippedRight()
+	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedRight()\n")
 	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n")
-
-	data = Inventory.getItemCounts(true)
-	writeFileSync("/startup_log.txt", "a", "Inventory.getItemCounts(true) -- before organize\n")
-	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n")
-
-	Inventory.organize()
-
-	data = Inventory.getItemCounts(false)
-	writeFileSync("/startup_log.txt", "a", "Inventory.getItemCounts(false) -- after organize\n")
-	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n")
-
-	sleep(1)
+--]]
 end
 
 -- let's go
-CoreSystem.run(dummyCallback)
+CoreSystem.run(testCallback)
 

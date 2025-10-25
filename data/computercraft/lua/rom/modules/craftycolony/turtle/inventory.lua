@@ -41,7 +41,6 @@ local db = {
 
 	-- last known slots snapshot: [1..16] = itemDetail|nil
 	slots      = {},
-	lastScan   = 0, 	-- os.epoch() / 3600 timestamp (ticks since the Minecraft game is created)
 	detailed   = false, -- whether the last scan was detailed or not
 }
 
@@ -73,7 +72,6 @@ local function init()
 
 	-- check the data
 	if type(data) == "table" and type(data.slots)    == "table"   then db.slots    = data.slots    end
-	if type(data) == "table" and type(data.lastScan) == "number"  then db.lastScan = data.lastScan end
 	if type(data) == "table" and type(data.detailed) == "boolean" then db.detailed = data.detailed end
 
 	-- if we found anything or not, we're initialized
@@ -84,7 +82,7 @@ end
 local function saveDB()
 
 	-- just send the relevant fields to CoreData
-	CoreData.setData(db.moduleName, { slots = db.slots, lastScan = db.lastScan, detailed = db.detailed })
+	CoreData.setData(db.moduleName, { slots = db.slots, detailed = db.detailed })
 end
 
 -- Perform an inventory scan, optionally detailed
@@ -92,7 +90,7 @@ end
 local function scan(detailed)
 
 	-- convert detailed to boolean
-	detailed = detailed and true or false
+	detailed = detailed and true or false -- consider always detailed scanning, who cares
 
 	-- scan slot by slot
 	local slots = {}
@@ -123,7 +121,6 @@ local function scan(detailed)
 
 	-- store snapshot
 	db.slots	= slots
-	db.lastScan = os.epoch() / 3600 -- timestamp in ticks since the Minecraft game is created
 	db.detailed = detailed
 
 	-- save the database
