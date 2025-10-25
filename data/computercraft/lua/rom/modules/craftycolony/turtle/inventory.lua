@@ -131,7 +131,7 @@ local function scan(detailed)
 end
 
 -- easy ensure function used by other functions
-function ensure(rescan, detailed)
+function ensure(detailed)
 
 	-- ensure turtle is calling this function
 	if not turtle then error("Inventory: turtle API not available") end
@@ -139,8 +139,8 @@ function ensure(rescan, detailed)
 	-- ensure initialized
 	if not db.initialized then init() end
 
-	-- rescan if requested
-	if rescan then scan(detailed) end
+	-- rescan with the detail level requested
+	scan(detailed)
 end
 
 
@@ -159,10 +159,10 @@ end
 
 -- find an empty slot
 -- returns true if successfull, false if not found
-function Inventory.selectEmpty(rescan)
+function Inventory.selectEmpty()
 
 	-- to be sure we're ready
-	ensure(rescan, false)
+	ensure(false)
 
 	-- loop the slots looking for empty slot
 	for slot = 1, 16 do
@@ -177,7 +177,7 @@ function Inventory.selectEmpty(rescan)
 	end
 
 	-- hmm, we should organize and try again
-	Inventory.organize(false) -- no need to rescan here, we just did that if it was requested
+	Inventory.organize() -- no need to rescan here, we just did that if it was requested
 
 	-- after organizing, if there is an empty slot, it will be slot 1
 	if not db.slots[1] then
@@ -193,16 +193,16 @@ end
 
 -- select any slot containing the item by name;
 -- returns true if successfull, false if not found
-function Inventory.selectItem(name, rescan)
+function Inventory.selectItem(name)
 
 	-- to be sure we're ready
-	ensure(rescan, false)
+	ensure(false)
 
 	-- loop the slots looking for empty slot
 	for slot = 1, 16 do
 
 		-- check for name match
-		if db.slots[slot].name == name then
+		if type(db.slots[slot]) == "table" and db.slots[slot].name == name then
 
 			-- select and return
 			turtle.select(slot)
@@ -216,10 +216,10 @@ end
 
 -- get a list of items with their counts
 -- returns table: itemName = count
-function Inventory.getItemCounts(rescan)
+function Inventory.getItemCounts()
 
 	-- to be sure we're ready
-	ensure(rescan, false)
+	ensure(false)
 
 	-- build counts table
 	local counts = {}
@@ -237,10 +237,10 @@ function Inventory.getItemCounts(rescan)
 end
 
 -- organize the inventory by grouping items together
-function Inventory.organize(rescan)
+function Inventory.organize()
 
 	-- to be sure we're ready (always rescan if we lack detailed data)
-	ensure(rescan or db.detailed == false, true)
+	ensure(true)
 
 	-- just move everything to the back, ignore errors
 	for source = 1, 15 do
