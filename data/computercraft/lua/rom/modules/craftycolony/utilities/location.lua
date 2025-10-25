@@ -98,6 +98,13 @@ function Location.forward(location, direction, n)
 	return location
 end
 
+function Location.back(location, direction, n)
+	n = n or 1
+	location.x = location.x - direction.dx * n
+	location.y = location.y - direction.dy * n
+	return location
+end
+
 --[[
            _
           | |
