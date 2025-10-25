@@ -2,8 +2,10 @@
 local Equiped = {}
 
 -- imports
-local CoreData = require("craftycolony.core.coredata")
-local Logger   = require("craftycolony.utilities.logger")
+local CoreData	= require("craftycolony.core.coredata")
+local Logger	= require("craftycolony.utilities.logger")
+
+local Inventory	= require("craftycolony.turtle.inventory")
 
 --[[
       _                     _       _   _
@@ -38,9 +40,9 @@ local db = {
 	-- lifecycle
 	initialized = false,
 
-	-- current known equipment; store minimal info for each side
-	left  = nil,   -- e.g., { name = "minecraft:diamond_pickaxe" }
-	right = nil,   -- e.g., { name = "minecraft:torch" }
+	-- current known equipment
+	left  = nil,   -- e.g., "minecraft:diamond_pickaxe", "minecraft:crafting_table"
+	right = nil,   -- e.g., "computercraft:wireless_modem"
 }
 
 --[[
@@ -53,22 +55,6 @@ local db = {
 
 --]]
 
-local function init()
-	-- fetch persisted data
-	local data = CoreData.getData(db.moduleName)
-
-	-- adopt stored values if present
-	if data.left  ~= nil then db.left  = data.left end
-	if data.right ~= nil then db.right = data.right end
-
-	-- ready
-	db.initialized = true
-end
-
-local function saveDB()
-	CoreData.setData(db.moduleName, { left = db.left, right = db.right })
-end
-
 --[[
   _                 _
  | |               | |
@@ -79,63 +65,55 @@ end
 
 --]]
 
+
+-- basic init function to setup the database
+-- no return
+local function init()
+	-- fetch persisted data
+	local data = CoreData.getData(db.moduleName)
+
+	-- adopt stored values if present
+	if type(data) == "table" then
+		db.left  = data.left
+		db.right = data.right
+	else
+		-- check left
+		data = turtle.getEquippedLeft()
+		if type(data) == "table" then db.left = data.name end
+
+		-- check right
+		data = turtle.getEquippedRight()
+		if type(data) == "table" then db.right = data.name end
+	end
+
+
+	-- ready
+	db.initialized = true
+end
+
+-- saves the database to CoreData
+-- no return
+local function saveDB()
+
+	-- store current data
+	CoreData.setData(db.moduleName, { left = db.left, right = db.right })
+end
+
+-- helper to ensure this module is allowed to run on this device
+-- no return
 local function ensure()
 	if not turtle then error("Equiped: turtle API not available") end
 	if not db.initialized then init() end
 end
 
-local function sideKey(side)
-	if side == "left" or side == "right" then return side end
-	error("Equiped: invalid side, expected 'left' or 'right'")
-end
-
--- Determine the name that will be equipped based on the currently selected slot
-local function currentSelectedItemName()
-	local detail = turtle.getItemDetail()
-	return detail and detail.name or nil
-end
-
--- Generic equip/unequip primitive; when slot has an item, this equips it to the side;
--- when slot is empty, it unequips whatever is on that side into the selected slot (swap behavior).
-local function doEquip(side, slot, intent)
-	ensure()
-
-	-- optionally select slot
-	if slot ~= nil then
-		if type(slot) ~= "number" or slot % 1 ~= 0 or slot < 1 or slot > 16 then
-			error("Equiped." .. side .. ": invalid slot (1-16)")
-		end
-		turtle.select(slot)
-	end
-
-	-- remember what we're about to equip from inventory (if any)
-	local incomingName = currentSelectedItemName()
-
-	-- enforce intent semantics
-	if intent == "equip" and not incomingName then
-		return false, "selected slot is empty; cannot equip"
-	elseif intent == "unequip" and incomingName then
-		return false, "selected slot not empty; cannot unequip"
-	end
-
-	-- perform equip swap
-	local ok, err
-	if side == "left" then
-		ok, err = turtle.equipLeft()
-	else
-		ok, err = turtle.equipRight()
-	end
-	if not ok then return false, (err or "equip failed") end
-
-	-- if intent is equip, we equipped an item from inventory; if unequip, side is now empty
-	if intent == "equip" then
-		db[side] = { name = incomingName }
-	else
-		db[side] = nil
-	end
-
+local function setLeft(item)
+	db.left = item
 	saveDB()
-	return true, db[side]
+end
+
+local function setRight(item)
+	db.right = item
+	saveDB()
 end
 
 --[[
@@ -150,40 +128,197 @@ end
 
 --]]
 
--- Query current known equipment
-function Equiped.get(side)
-	if not db.initialized then init() end
-	if side == nil then return { left = db.left, right = db.right } end
-	return db[sideKey(side)]
+-- check if item is equiped on either side "minecraft:diamond_pickaxe"; passing nil checks for a free side
+-- returns boolean (true|false)
+function Equiped.isEquiped(item)
+
+	-- always be sure
+	ensure()
+
+	-- check with db
+	return db.left == item or db.right == item
 end
 
-function Equiped.getLeft()
-	if not db.initialized then init() end
-	return db.left
+-- basic function to equip items
+-- accepts one or two item names
+-- returns restore table if changes were made, nil if no changes, or false + error message on failure
+function Equiped.equip(first, second)
+
+	-- check parameter types
+	if type(first)  ~= "string"								then return false, "Equiped.equip(): first item name must be a string, it is a "..type(first) end
+	if type(second) ~= "string" and type(second) ~= "nil"	then return false, "Equiped.equip(): second item name must be a string or nil, it is a "..type(second) end
+
+	-- always be sure
+	ensure()
+
+	-- capture state before any changes
+	local before = { left = db.left, right = db.right }
+	local changed = false
+
+	-- check what we should do left and right
+	local leftItem, rightItem = first, second	-- sets default
+
+	-- swap the default based on database if usefull
+	if rightItem == db.left or leftItem == db.right then
+
+		-- swap
+		leftItem, rightItem = second, first
+
+	else
+		-- check for empty spot, make sure it's used
+		if (leftItem ~= nil and db.right == nil) or (rightItem ~= nil and db.left == nil) then
+
+			-- swap
+			leftItem, rightItem = second, first
+		end
+	end
+
+	-- equip left if needed
+	if leftItem ~= db.left and leftItem ~= nil then
+
+		local success = Inventory.selectItem(leftItem, true)
+		if not success then return false, "Equiped.equip(): item not found in inventory: " .. leftItem end
+
+		-- we take the left side
+		local ok, err = turtle.equipLeft()
+		if not ok then return false, "Equiped.equip() - turtle.equipLeft() error: " .. tostring(err) end
+
+		-- still here? Then the equip to the left side worked
+		setLeft(leftItem)
+
+		-- mark as changed
+		changed = true
+	end
+
+	-- equip right if needed
+	if rightItem ~= db.right and rightItem ~= nil then
+
+		local success = Inventory.selectItem(rightItem, true)
+		if not success then return false, "Equiped.equip(): item not found in inventory: " .. rightItem end
+
+		-- we take the right side
+		local ok, err = turtle.equipRight()
+		if not ok then return false, "Equiped.equip() - turtle.equipRight() error: " .. tostring(err) end
+
+		-- still here? Then the equip to the right side worked
+		setRight(rightItem)
+
+		-- mark as changed
+		changed = true
+	end
+
+	-- return restore table only if changes were made
+	if changed	then return before
+				else return nil
+	end
 end
 
-function Equiped.getRight()
-	if not db.initialized then init() end
-	return db.right
+-- free up an items from a side (unequip)
+-- returns boolean (true|false), errorMessage
+function Equiped.free(item)
+
+	-- is the item equiped? (this also ensures initialization)
+	if not Equiped.isEquiped(item) then return false, "item "..item.." not equipped" end
+
+	-- get a free slot
+	local ok = Inventory.selectEmpty(true)
+	if not ok then return false, "Equiped.free("..item.."): no empty inventory slot available" end
+
+	-- left side?
+	if db.left == item then
+
+		-- remove it
+		ok = turtle.equipLeft()
+
+		-- update database?
+		if ok then setLeft(nil) end
+
+		-- done
+		return ok
+
+	-- right side?
+	elseif db.right == item then
+
+		-- remove it
+		ok = turtle.equipRight()
+
+		-- update database?
+		if ok then setRight(nil) end
+
+		-- done
+		return ok
+
+	end
 end
 
--- Equip helpers; if slot is provided, we select it first
-function Equiped.equipLeft(slot)
-	return doEquip("left", slot, "equip")
+
+-- function restores the equipment based on a restore table previously returned by Equiped.equip()
+-- returns nothing
+function Equiped.restore(restoreTable)
+
+	-- check paramters first
+	if type(restoreTable) ~= "table" then error("Equiped.restore(): restoreTable must be a table, it is a "..type(restoreTable)) end
+
+	-- always be sure
+	ensure()
+
+	-- do this twice, since the tool for one side may be on the other side and there is not much free space
+	for i = 1, 2 do
+
+		-- unequip left?
+		if (restoreTable.left == nil or restoreTable.left ~= db.left) and db.left ~= nil then
+
+			-- find a free inventory spot
+			local ok = Inventory.selectEmpty()
+			if ok then
+
+				-- ok, we have a free spot
+				local ok, err = turtle.equipLeft()
+				if ok then setLeft(nil) end
+			end
+		end
+
+		-- unequip right?
+		if (restoreTable.right == nil or restoreTable.right ~= db.right) and db.right ~= nil then
+
+			-- find a free inventory spot
+			local ok = Inventory.selectEmpty()
+			if ok then
+
+				-- ok, we have a free spot
+				local ok, err = turtle.equipRight()
+				if ok then setRight(nil) end
+			end
+		end
+
+		-- equip something on the left side?
+		if restoreTable.left ~= nil and restoreTable.left ~= db.left then
+
+			-- find the requested item in the inventory
+			local ok = Inventory.selectItem(restoreTable.left)
+			if ok then
+
+				-- ok, we have the item we need
+				local ok, err = turtle.equipLeft()
+				if ok then setLeft(restoreTable.left) end
+			end
+		end
+
+		-- equip something on the right side?
+		if restoreTable.right ~= nil and restoreTable.right ~= db.right then
+
+			-- find the requested item in the inventory
+			local ok = Inventory.selectItem(restoreTable.right)
+			if ok then
+
+				-- ok, we have the item we need
+				local ok, err = turtle.equipRight()
+				if ok then setRight(restoreTable.right) end
+			end
+		end
+	end
 end
 
-function Equiped.equipRight(slot)
-	return doEquip("right", slot, "equip")
-end
-
--- Unequip helpers; ensures the selected slot is empty (recommended) and swaps the current tool into it
-function Equiped.unequipLeft(slot)
-	return doEquip("left", slot, "unequip")
-end
-
-function Equiped.unequipRight(slot)
-	return doEquip("right", slot, "unequip")
-end
 
 --[[
            _
