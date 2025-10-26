@@ -188,15 +188,35 @@ local function parseKey(key)
 end
 
 -- calculate cuboid bounds from two locations with expansion
-local function getCuboidBounds(loc1, loc2, expansion)
-	return {
-		minX = math.min(loc1.x, loc2.x) - expansion,
-		maxX = math.max(loc1.x, loc2.x) + expansion,
-		minY = math.min(loc1.y, loc2.y) - expansion,
-		maxY = math.max(loc1.y, loc2.y) + expansion,
-		minZ = math.min(loc1.z, loc2.z) - expansion,
-		maxZ = math.max(loc1.z, loc2.z) + expansion,
+local function getCuboidBounds(loc1, targetKeys, expansion)
+
+	-- start with the start location
+	local cuboid = {
+		minX = loc1.x - expansion,
+		maxX = loc1.x + expansion,
+		minY = loc1.y - expansion,
+		maxY = loc1.y + expansion,
+		minZ = loc1.z - expansion,
+		maxZ = loc1.z + expansion,
 	}
+
+	-- now loop all target locations to expand the cuboid if needed
+	for key, _ in pairs(targetKeys) do
+
+		-- we need a location, not a key
+		local loc = parseKey(key)
+
+		-- expand cuboid as needed
+		if cuboid.minX > loc.x - expansion then cuboid.minX = loc.x - expansion end
+		if cuboid.maxX < loc.x + expansion then cuboid.maxX = loc.x + expansion end
+		if cuboid.minY > loc.y - expansion then cuboid.minY = loc.y - expansion end
+		if cuboid.maxY < loc.y + expansion then cuboid.maxY = loc.y + expansion end
+		if cuboid.minZ > loc.z - expansion then cuboid.minZ = loc.z - expansion end
+		if cuboid.maxZ < loc.z + expansion then cuboid.maxZ = loc.z + expansion end
+	end
+
+	-- return the final cuboid
+	return cuboid
 end
 
 -- get all 6 neighbors of a location within bounds
@@ -238,11 +258,32 @@ local function getNeighbors(location, bounds, blocked)
 	return neighbors
 end
 
+local function convertTargetLocations(targetLocations)
+
+	-- variables
+	local targetKeys = {}
+
+	-- targetLocations should be a list of locations, or maybe just a single location
+	if type(targetLocations) ~= "table" then return nil, "Move.convertTargetLocations: targetLocations must be a table" end
+
+	-- check if this is a single location
+	if type(targetLocations.x) == "number" and type(targetLocations.y) == "number" and type(targetLocations.z) == "number" then targetKeys[ makeKey(targetLocations) ] = true end
+
+	-- I guess a list of targets
+	for _, loc in ipairs(targetLocations) do
+		if type(loc.x) == "number" and type(loc.y) == "number" and type(loc.z) == "number" then targetKeys[ makeKey(loc) ] = true end
+	end
+
+	-- check if we found any valid target locations
+	if next(targetKeys) == nil	then return nil, "Move.convertTargetLocations: no valid target locations found"
+								else return targetKeys
+	end
+end
+
 -- dijkstra pathfinding from start to goal within bounds, avoiding blocked cells
 -- returns path as array of locations, or nil if no path found
-local function dijkstra(start, goal, bounds, blocked)
+local function dijkstra(start, goalKeys, bounds, blocked)
 	local startKey	= makeKey(start)
-	local goalKey	= makeKey(goal)
 
 	-- already at goal
 --	if startKey == goalKey then return {} end -- dijkstra will return an empty path anyway when we are already there
@@ -280,11 +321,11 @@ local function dijkstra(start, goal, bounds, blocked)
 		local minDist		= distances[currentKey]
 
 		-- check if we reached the goal
-		if currentKey == goalKey then
+		if goalKeys[currentKey] then
 
 			-- reconstruct path
 			local path = {}
-			local key = goalKey
+			local key = currentKey
 			while previous[key] do
 				table.insert(path, 1, parseKey(key))
 				key = previous[key]
@@ -376,7 +417,6 @@ local function executePath(path)
 	return true
 end
 
-
 --[[
               _     _ _
              | |   | (_)
@@ -456,7 +496,7 @@ end
 
 -- function to go to a target location {x,y,z}
 -- returns (true|false, err): whether the turn was successful or not
-function Move.goto(targetLocation)
+function Move.goto(targetLocations)
 
 	-- not usefull for computers
 	if not turtle then error("Move.goto: turtle API not available") end
@@ -464,11 +504,9 @@ function Move.goto(targetLocation)
 	-- make sure we are initialized
 	if not db.initialized then init() end
 
-	-- validate target location
-	if type(targetLocation) ~= "table" or type(targetLocation.x) ~= "number" or type(targetLocation.y) ~= "number" or type(targetLocation.z) ~= "number" then error("Move.goto: invalid target location") end
-
-	-- check if already at target
-	if Location.equals(db.location, targetLocation) then return true end
+	-- validate target locations
+	local targetKeys, err = convertTargetLocations(targetLocations)
+	if not targetKeys then return false, "Move.goto: invalid target location: "..err end
 
 	-- initialize blocked cells map (persists across expansion)
 	local blocked = {}
@@ -481,10 +519,10 @@ function Move.goto(targetLocation)
 	while turtle.getFuelLevel() > 0 do
 
 		-- calculate current cuboid bounds
-		local bounds = getCuboidBounds(startLocation, targetLocation, expansion)
+		local bounds = getCuboidBounds(startLocation, targetKeys, expansion)
 
 		-- run dijkstra to find a path
-		local path = dijkstra(db.location, targetLocation, bounds, blocked)
+		local path = dijkstra(db.location, targetKeys, bounds, blocked)
 
 		if not path then
 			-- no path found, expand the cuboid and try again
@@ -493,14 +531,12 @@ function Move.goto(targetLocation)
 			-- path found, try to execute it
 			local success, blockedLoc = executePath(path)
 
-			if success then
-				-- successfully reached target, we master this!!
-				return true
+			-- successfully reached target, we master this!!
+			if success then	return true
 			else
 				-- movement was blocked, mark the location and re-run dijkstra
 				local blockedKey = makeKey(blockedLoc)
 				blocked[blockedKey] = true
-				-- loop will retry dijkstra with the same expansion and updated blocked map
 			end
 		end
 	end
