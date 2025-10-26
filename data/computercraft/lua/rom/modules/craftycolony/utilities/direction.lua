@@ -88,13 +88,13 @@ function Direction.equals(dir1, dir2)
 	return dir1.dx == dir2.dx and dir1.dy == dir2.dy
 end
 
-function Direction.left(direction)
-	if not validDirection(direction) then return error("Direction.left(direction) - Invalid direction value") end
+function Direction.turnLeft(direction)
+	if not validDirection(direction) then return error("Direction.turnLeft(direction) - Invalid direction value") end
 	return Direction.new(-direction.dy, direction.dx)
 end
 
-function Direction.right(direction)
-	if not validDirection(direction) then return error("Direction.right(direction) - Invalid direction value") end
+function Direction.turnRight(direction)
+	if not validDirection(direction) then return error("Direction.turnRight(direction) - Invalid direction value") end
 	return Direction.new(direction.dy, -direction.dx)
 end
 
