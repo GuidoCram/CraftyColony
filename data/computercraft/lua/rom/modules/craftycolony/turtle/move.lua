@@ -124,7 +124,7 @@ local function move(steps, direction)
 		if not success then return false, "Move.forward: unable to move forward at step "..i..": "..tostring(err) end
 
 		-- update location
-		db.location = locationUpdateFunc(db.location, db.direction, 1)
+		db.location = locationUpdateFunc(db.location, 1, db.direction)
 		saveDB()
 	end
 
@@ -167,6 +167,212 @@ local function turn(turns, direction)
 	end
 
 	-- well done!
+	return true
+end
+
+-- convert location {x,y,z} to string key "x:y:z"
+local function makeKey(location)
+	return location.x .. ":" .. location.y .. ":" .. location.z
+end
+
+-- convert string key "x:y:z" back to location {x,y,z}
+local function parseKey(key)
+	-- variables
+	local parts = {}
+
+	-- convert key to array
+	for part in string.gmatch(key, "[^:]+") do table.insert(parts, tonumber(part)) end
+
+	-- convert array to location
+	return { x = parts[1], y = parts[2], z = parts[3] }
+end
+
+-- calculate cuboid bounds from two locations with expansion
+local function getCuboidBounds(loc1, loc2, expansion)
+	return {
+		minX = math.min(loc1.x, loc2.x) - expansion,
+		maxX = math.max(loc1.x, loc2.x) + expansion,
+		minY = math.min(loc1.y, loc2.y) - expansion,
+		maxY = math.max(loc1.y, loc2.y) + expansion,
+		minZ = math.min(loc1.z, loc2.z) - expansion,
+		maxZ = math.max(loc1.z, loc2.z) + expansion,
+	}
+end
+
+-- get all 6 neighbors of a location within bounds
+local function getNeighbors(location, bounds, blocked)
+
+	-- initialize neighbors list
+	local neighbors = {}
+
+	-- allowed directions
+	local deltas = {
+		{ dx =  1, dy =  0, dz =  0 }, -- +X
+		{ dx = -1, dy =  0, dz =  0 }, -- -X
+		{ dx =  0, dy =  1, dz =  0 }, -- +Y
+		{ dx =  0, dy = -1, dz =  0 }, -- -Y
+		{ dx =  0, dy =  0, dz =  1 }, -- +Z
+		{ dx =  0, dy =  0, dz = -1 }, -- -Z
+	}
+
+	-- find neighbors
+	for _, delta in ipairs(deltas) do
+		local neighbor = {
+			x = location.x + delta.dx,
+			y = location.y + delta.dy,
+			z = location.z + delta.dz,
+		}
+
+		-- check if within bounds
+		if neighbor.x >= bounds.minX and neighbor.x <= bounds.maxX and
+		   neighbor.y >= bounds.minY and neighbor.y <= bounds.maxY and
+		   neighbor.z >= bounds.minZ and neighbor.z <= bounds.maxZ then
+
+			-- check if not blocked
+			local key = makeKey(neighbor)
+			if not blocked[key] then table.insert(neighbors, neighbor) end
+		end
+	end
+
+	-- these are the neighbors
+	return neighbors
+end
+
+-- dijkstra pathfinding from start to goal within bounds, avoiding blocked cells
+-- returns path as array of locations, or nil if no path found
+local function dijkstra(start, goal, bounds, blocked)
+	local startKey	= makeKey(start)
+	local goalKey	= makeKey(goal)
+
+	-- already at goal
+--	if startKey == goalKey then return {} end -- dijkstra will return an empty path anyway when we are already there
+
+	-- priority queue (simple array, we'll find minimum each time)
+	local openSet	= { startKey }
+	local distances	= { [startKey] = 0 }
+	local previous	= {}
+	local visited	= {}					-- all the locations already processed
+
+	-- main loop, as long as there are nodes to explore
+	while #openSet > 0 do
+
+--[[
+		-- this would be usefull when the openSet was not sorted; maybe one day when turning costs are added
+
+		-- find node with minimum distance
+		local currentKey	= nil
+		local minDist		= math.huge
+		local minIndex		= nil
+
+		for i, key in ipairs(openSet) do
+			if distances[key] < minDist then
+				minDist = distances[key]
+				currentKey = key
+				minIndex = i
+			end
+		end
+
+		-- remove from open set
+		table.remove(openSet, minIndex)
+--]]
+		-- the first in the openSet should be the best one to process next
+		local currentKey	= table.remove(openSet, 1)
+		local minDist		= distances[currentKey]
+
+		-- check if we reached the goal
+		if currentKey == goalKey then
+
+			-- reconstruct path
+			local path = {}
+			local key = goalKey
+			while previous[key] do
+				table.insert(path, 1, parseKey(key))
+				key = previous[key]
+			end
+			return path
+		end
+
+		-- mark as visited
+		visited[currentKey] = true
+
+		-- check all neighbors
+		local currentLoc = parseKey(currentKey)
+		local neighbors = getNeighbors(currentLoc, bounds, blocked)
+
+		-- loop the neighbors, if any
+		for _, neighbor in ipairs(neighbors) do
+			local neighborKey = makeKey(neighbor)
+
+			-- only if not visited, otherwise the location is already processed or already in the openSet
+			if not visited[neighborKey] then
+
+				-- calculate cost, just 1 per move
+				local newDist 	= distances[currentKey] + 1 -- all moves cost 1
+
+				-- update distance if first time or better then previous
+				if not distances[neighborKey] or newDist < distances[neighborKey] then
+
+					-- if there is no distance yet, it means we need to add it to the open set
+					local addToOpenSet = distances[neighborKey] == nil
+
+					-- update distance and previous
+					distances[neighborKey]	= newDist
+					previous[neighborKey]	= currentKey
+
+					-- add to open set if not already there
+					if addToOpenSet then table.insert(openSet, neighborKey) end
+				end
+			end
+		end
+	end
+
+	-- no path found
+	return nil
+end
+
+-- execute a path step by step, return true if successful, or false with blocked location
+local function executePath(path)
+
+	-- step by step
+	for i, targetLoc in ipairs(path) do
+
+		-- calculate delta from current to target
+		local dx = targetLoc.x - db.location.x
+		local dy = targetLoc.y - db.location.y
+		local dz = targetLoc.z - db.location.z
+
+		-- determine move type and execute
+		local success, err
+
+		-- up and down are easy
+			if dz ==  1 then success, err = Move.up(1)
+		elseif dz == -1 then success, err = Move.down(1)
+		else --elseif dx ~= 0 or dy ~= 0 then
+
+			-- need to turn to face the right direction
+			local targetDirection = Direction.new(dx, dy)
+
+			-- turn until facing the right direction
+			while not Direction.equals(db.direction, targetDirection) do
+
+				-- this is what left looks like
+				local leftDir = Direction.turnLeft(db.direction)
+
+				-- requested direction same as left?
+				if Direction.equals(leftDir, targetDirection)	then Move.turnLeft(1)
+																else Move.turnRight(1)
+				end
+			end
+
+			-- now move forward
+			success, err = Move.forward(1)
+		end
+
+		-- check if move succeeded and if not, return false with blocked location
+		if not success then return false, targetLoc end
+	end
+
+	-- all done if we are still here
 	return true
 end
 
@@ -245,6 +451,62 @@ end
 function Move.turnRight(turns)
 	-- easy
 	return turn(turns, "right")
+end
+
+
+-- function to go to a target location {x,y,z}
+-- returns (true|false, err): whether the turn was successful or not
+function Move.goto(targetLocation)
+
+	-- not usefull for computers
+	if not turtle then error("Move.goto: turtle API not available") end
+
+	-- make sure we are initialized
+	if not db.initialized then init() end
+
+	-- validate target location
+	if type(targetLocation) ~= "table" or type(targetLocation.x) ~= "number" or type(targetLocation.y) ~= "number" or type(targetLocation.z) ~= "number" then error("Move.goto: invalid target location") end
+
+	-- check if already at target
+	if Location.equals(db.location, targetLocation) then return true end
+
+	-- initialize blocked cells map (persists across expansion)
+	local blocked = {}
+	local expansion = 0
+
+	-- our start location
+	local startLocation = Location.clone(db.location)
+
+	-- main loop: expand cuboid and retry until we reach the target
+	while turtle.getFuelLevel() > 0 do
+
+		-- calculate current cuboid bounds
+		local bounds = getCuboidBounds(startLocation, targetLocation, expansion)
+
+		-- run dijkstra to find a path
+		local path = dijkstra(db.location, targetLocation, bounds, blocked)
+
+		if not path then
+			-- no path found, expand the cuboid and try again
+			expansion = expansion + 1
+		else
+			-- path found, try to execute it
+			local success, blockedLoc = executePath(path)
+
+			if success then
+				-- successfully reached target, we master this!!
+				return true
+			else
+				-- movement was blocked, mark the location and re-run dijkstra
+				local blockedKey = makeKey(blockedLoc)
+				blocked[blockedKey] = true
+				-- loop will retry dijkstra with the same expansion and updated blocked map
+			end
+		end
+	end
+
+	-- running out of fuel?
+	return false, "Move.goto: unable to reach target location, out of fuel"
 end
 
 --[[
