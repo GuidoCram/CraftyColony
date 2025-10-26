@@ -80,26 +80,26 @@ function Location.equals(loc1, loc2)
 end
 
 function Location.up(location, n)
-	n = n or 1
+	if type(n) ~= "number" then n = 1 end
 	location.z = location.z + n
 	return location
 end
 
 function Location.down(location, n)
-	n = n or 1
+	if type(n) ~= "number" then n = 1 end
 	location.z = location.z - n
 	return location
 end
 
-function Location.forward(location, direction, n)
-	n = n or 1
+function Location.forward(location, n, direction)
+	if type(n) ~= "number" then n = 1 end
 	location.x = location.x + direction.dx * n
 	location.y = location.y + direction.dy * n
 	return location
 end
 
-function Location.back(location, direction, n)
-	n = n or 1
+function Location.back(location, n, direction)
+	if type(n) ~= "number" then n = 1 end
 	location.x = location.x - direction.dx * n
 	location.y = location.y - direction.dy * n
 	return location
