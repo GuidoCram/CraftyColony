@@ -71,35 +71,60 @@ function Location.new(x, y, z)
 	}
 end
 
+function Location.is(location)
+	return type(location) == "table"
+	   and type(location.x) == "number"
+	   and type(location.y) == "number"
+	   and type(location.z) == "number"
+end
+
 function Location.clone(location)
+	-- check parameters
+	if not Location.is(location) then return nil, "invalid location" end
+
 	return Location.new(location.x, location.y, location.z)
 end
 
 function Location.equals(loc1, loc2)
+	-- check parameters
+	if not Location.is(loc1) then return nil, "invalid location" end
+	if not Location.is(loc2) then return nil, "invalid location" end
+
 	return loc1.x == loc2.x and loc1.y == loc2.y and loc1.z == loc2.z
 end
 
 function Location.up(location, n)
+	-- check parameters
+	if not Location.is(location) then return nil, "invalid location" end
 	if type(n) ~= "number" then n = 1 end
+
 	location.z = location.z + n
 	return location
 end
 
 function Location.down(location, n)
+	-- check parameters
+	if not Location.is(location) then return nil, "invalid location" end
 	if type(n) ~= "number" then n = 1 end
+
 	location.z = location.z - n
 	return location
 end
 
 function Location.forward(location, n, direction)
+	-- check parameters
+	if not Location.is(location) then return nil, "invalid location" end
 	if type(n) ~= "number" then n = 1 end
+
 	location.x = location.x + direction.dx * n
 	location.y = location.y + direction.dy * n
 	return location
 end
 
 function Location.back(location, n, direction)
+	if not Location.is(location) then return nil, "invalid location" end
 	if type(n) ~= "number" then n = 1 end
+
 	location.x = location.x - direction.dx * n
 	location.y = location.y - direction.dy * n
 	return location
