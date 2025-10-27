@@ -267,11 +267,11 @@ local function convertTargetLocations(targetLocations)
 	if type(targetLocations) ~= "table" then return nil, "Move.convertTargetLocations: targetLocations must be a table" end
 
 	-- check if this is a single location
-	if type(targetLocations.x) == "number" and type(targetLocations.y) == "number" and type(targetLocations.z) == "number" then targetKeys[ makeKey(targetLocations) ] = true end
+	if Location.is(targetLocations) then targetLocations = { targetLocations } end
 
 	-- I guess a list of targets
-	for _, loc in ipairs(targetLocations) do
-		if type(loc.x) == "number" and type(loc.y) == "number" and type(loc.z) == "number" then targetKeys[ makeKey(loc) ] = true end
+	for _, location in ipairs(targetLocations) do
+		if Location.is(location) then targetKeys[ makeKey(location) ] = true end
 	end
 
 	-- check if we found any valid target locations
