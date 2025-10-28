@@ -5,12 +5,15 @@ package.path = package.path..";/rom/modules/?;/rom/modules/?.lua"
 
 
 -- import crafty colony CoreSystem
+local CoreAction	= require("craftycolony.core.coreaction")
 local CoreSystem	= require("craftycolony.core.coresystem")
 -- local CoreUtilities	= require("craftycolony.core.coreutilities")
+-- local Inventory		= require("craftycolony.turtle.inventory")
+-- local Equiped		= require("craftycolony.turtle.equiped")
 local Inventory		= require("craftycolony.turtle.inventory")
-local Equiped		= require("craftycolony.turtle.equiped")
+local Move			= require("craftycolony.turtle.move")
 
-
+local Forester		= require("craftycolony.autonomous.forester")
 
 -- for writing files now
 local function writeFileSync(path, mode, data)
@@ -31,19 +34,22 @@ local function writeFileSync(path, mode, data)
     end
 end
 
+local done = false
+
+local function weAreDone()
+	done = true
+end
+
 local function testCallback()
-	print("Callback function executing...")
 
-	Equiped.restore({left = "minecraft:diamond_axe", 		right = "minecraft:diamond_pickaxe"})
-	Equiped.restore({left = "minecraft:diamond_pickaxe",	right = "minecraft:diamond_axe"})
-
-	Equiped.free("minecraft:diamond_pickaxe")
-	Equiped.free("minecraft:diamond_axe")
-
-	Equiped.equip("minecraft:diamond_pickaxe", "minecraft:diamond_axe")
-
---[[
 	writeFileSync("/startup_log.txt", "w", "Startup callback executed at "..os.date("%Y-%m-%d %H:%M:%S").."\n\n")
+
+--	Move.setLocation({x=3, y=2, z=0})
+--	Move.goTo({{x=3, y= 2, z=0}})
+
+	-- print the status of the Forester module
+	CoreAction.addActivity(Forester.harvestForest, nil, "normal", weAreDone, "Log Forester status")
+	while not done do print("current time: "..os.date("%H:%M:%S")) sleep(7) end
 
 	local data = turtle.getEquippedLeft()
 	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedLeft()\n")
@@ -52,7 +58,7 @@ local function testCallback()
 	data = turtle.getEquippedRight()
 	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedRight()\n")
 	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n")
---]]
+
 end
 
 -- let's go
