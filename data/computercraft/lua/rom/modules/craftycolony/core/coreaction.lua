@@ -84,17 +84,18 @@ end
 --]]
 
 -- function to add an activity to the queue
-function CoreAction.addActivity(func, data, priority, description)
+function CoreAction.addActivity(func, data, priority, callback, description)
 	-- func			the function to call
 	-- data			the data to pass to the function
 	-- priority		the priority of the activity: 'high', 'normal', 'low' (default: 'normal')
+	-- callback		to be executed when the activity is done (optional)
 	-- description	the description of the activity (for debugging purposes)
 
 	-- add the function to the appropriate queue based on priority
 		if not db.acceptingWork then return
-	elseif priority == "high"	then table.insert(db.highQueue, 	{ func = func, data = data, description = description })
-	elseif priority == "low"	then table.insert(db.lowQueue, 		{ func = func, data = data, description = description })
-								else table.insert(db.normalQueue,	{ func = func, data = data, description = description })
+	elseif priority == "high"	then table.insert(db.highQueue, 	{ func = func, data = data, callback = callback, description = description })
+	elseif priority == "low"	then table.insert(db.lowQueue, 		{ func = func, data = data, callback = callback, description = description })
+								else table.insert(db.normalQueue,	{ func = func, data = data, callback = callback, description = description })
 	end
 end
 
@@ -123,6 +124,15 @@ function CoreAction.run()
 
 			-- check the result
 			if not status then print("Error in CoreAction.run when processing '"..(activity.description or "unknown").."': "..err) end
+
+			-- seems we're done, call the callback if present
+			if type(activity.callback) == "function" then
+				-- call it protected as well
+				local cbStatus, cbErr = pcall(activity.callback)
+
+				-- check the result
+				if not cbStatus then print("Error in CoreAction.run callback when processing '"..(activity.description or "unknown").."': "..cbErr) end
+			end
 
 		else
 			-- if no activity, sleep for a short time to prevent busy waiting
