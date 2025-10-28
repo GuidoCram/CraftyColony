@@ -437,6 +437,14 @@ function Move.getLocation()
 	return Location.clone(db.location)
 end
 
+function Move.getDirection()
+	-- make sure we are initialized
+	if not db.initialized then init() end
+
+	-- return a clone of our direction
+	return Direction.clone(db.direction)
+end
+
 function Move.setLocation(location)
 	-- usefull when a new computer is just created and has no location yet
 
