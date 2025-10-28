@@ -2,6 +2,8 @@
 local Forester = {}
 
 -- imports
+local CoreDisk	= require("craftycolony.core.coredisk")
+
 local Equiped	= require("craftycolony.turtle.equiped")
 local Inventory	= require("craftycolony.turtle.inventory")
 local Move		= require("craftycolony.turtle.move")
@@ -66,7 +68,6 @@ local db = {
 	-- fuel usage
 	maxFuelPerTree		= 35,
 	maxFuelBetweenTrees	= 6,
-
 }
 
 --[[
@@ -90,7 +91,24 @@ local db = {
 
 --]]
 
+local function initCallback(data)
+	-- did we get data?
+	if type(data) == "table" then
+
+		-- load data
+		if type(data.currentWidth)	== "number" then db.currentWidth	= data.currentWidth end
+		if type(data.currentDepth)	== "number" then db.currentDepth	= data.currentDepth end
+
+	end
+
+	-- update initialized
+	db.initialized = true
+end
+
 local function init()
+
+	-- read our data from disk (if any)
+	CoreDisk.readFileIntoTable("/craftycolony/foresterdb.json", initCallback)
 
 	-- update initialized
 	db.initialized = true
@@ -350,6 +368,9 @@ local function walkForestRound()
     -- terug in positie
 	Move.goTo(db.restLocation)
 	Move.turnTo(db.restDirection)
+
+	-- organize the inventory
+	Inventory.organize()
 end
 
 --[[
