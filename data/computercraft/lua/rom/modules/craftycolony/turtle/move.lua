@@ -429,6 +429,14 @@ end
 
 --]]
 
+function Move.getLocation()
+	-- make sure we are initialized
+	if not db.initialized then init() end
+
+	-- return a clone of our location
+	return Location.clone(db.location)
+end
+
 function Move.setLocation(location)
 	-- usefull when a new computer is just created and has no location yet
 
