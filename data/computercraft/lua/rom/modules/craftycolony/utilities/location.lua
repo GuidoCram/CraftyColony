@@ -130,6 +130,26 @@ function Location.back(location, n, direction)
 	return location
 end
 
+function Location.toString(location)
+	-- check parameters
+	if not Location.isValid(location) then return nil, "invalid location" end
+
+	-- return string representation
+	return "("..location.x..","..location.y..","..location.z..")"
+end
+
+function Location.fromString(str)
+	-- check parameters
+	if type(str) ~= "string" then return nil, "invalid string" end
+
+	-- try to parse
+	local x, y, z = string.match(str, "^%s*%(%s*(-?%d+)%s*,%s*(-?%d+)%s*,%s*(-?%d+)%s*%)%s*$")
+	if x == nil or y == nil or z == nil then return nil, "string does not represent a location" end
+
+	-- return location
+	return Location.new(tonumber(x), tonumber(y), tonumber(z))
+end
+
 --[[
            _
           | |
