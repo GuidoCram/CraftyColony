@@ -267,11 +267,11 @@ local function convertTargetLocations(targetLocations)
 	if type(targetLocations) ~= "table" then return nil, "Move.convertTargetLocations: targetLocations must be a table" end
 
 	-- check if this is a single location
-	if Location.is(targetLocations) then targetLocations = { targetLocations } end
+	if Location.isValid(targetLocations) then targetLocations = { targetLocations } end
 
 	-- I guess a list of targets
 	for _, location in ipairs(targetLocations) do
-		if Location.is(location) then targetKeys[ makeKey(location) ] = true end
+		if Location.isValid(location) then targetKeys[ makeKey(location) ] = true end
 	end
 
 	-- check if we found any valid target locations
@@ -493,20 +493,46 @@ function Move.turnRight(turns)
 	return turn(turns, "right")
 end
 
+function Move.turnTo(direction)
+
+	-- not usefull for computers
+	if not turtle then error("Move.turnTo: turtle API not available") end
+
+	-- check direction parameter
+	if not Direction.isValid(direction) then return false, "Move.turnTo: invalid direction parameter" end
+
+	-- make sure we are initialized
+	if not db.initialized then init() end
+
+	-- turn until facing the right direction
+	while not Direction.equals(db.direction, direction) do
+
+		-- this is what left looks like
+		local leftDir = Direction.turnLeft(db.direction)
+
+		-- requested direction same as left?
+		if Direction.equals(leftDir, direction)	then Move.turnLeft(1)
+												else Move.turnRight(1)
+		end
+	end
+
+	-- done
+	return true
+end
 
 -- function to go to a target location {x,y,z}
 -- returns (true|false, err): whether the turn was successful or not
-function Move.goto(targetLocations)
+function Move.goTo(targetLocations)
 
 	-- not usefull for computers
-	if not turtle then error("Move.goto: turtle API not available") end
+	if not turtle then error("Move.goTo: turtle API not available") end
 
 	-- make sure we are initialized
 	if not db.initialized then init() end
 
 	-- validate target locations
 	local targetKeys, err = convertTargetLocations(targetLocations)
-	if not targetKeys then return false, "Move.goto: invalid target location: "..err end
+	if not targetKeys then return false, "Move.goTo: invalid target location: "..err end
 
 	-- initialize blocked cells map (persists across expansion)
 	local blocked = {}
@@ -542,7 +568,7 @@ function Move.goto(targetLocations)
 	end
 
 	-- running out of fuel?
-	return false, "Move.goto: unable to reach target location, out of fuel"
+	return false, "Move.goTo: unable to reach target location, out of fuel"
 end
 
 --[[
