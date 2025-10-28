@@ -2,8 +2,7 @@
 local Direction = {}
 
 -- imports
-
-local CoreDisk = require("craftycolony.core.coredisk")
+local CoreDisk	= require("craftycolony.core.coredisk")
 
 --[[
       _                     _       _   _
@@ -49,10 +48,6 @@ local db = {
 
 --]]
 
-local function validDirection(direction)
-	return (type(direction) == "table") and (type(direction.dx) == "number") and (type(direction.dy) == "number") and (math.abs(direction.dx + direction.dy) == 1) and (direction.dx * direction.dy == 0)
-end
-
 --[[
               _     _ _
              | |   | (_)
@@ -67,34 +62,55 @@ end
 
 function Direction.new(dx, dy)
 
-	-- check input
-	if (type(dx) ~= "number") or (type(dy) ~= "number") or (math.abs(dx + dy) ~= 1) or (dx * dy ~= 0) then error("Direction.new(dx, dy) - Invalid direction values: (" .. tostring(dx) .. ", " .. tostring(dy) .. ")") end
+	-- check input, maybe just a compass direction
+	if type(dx) == "string" and type(dy) == "nil" then
 
-	-- klaar
-	return {
-		dx = dx,
-		dy = dy
-	}
+		-- convert parameter to lower case
+		local dir = string.lower(dx)
+
+		-- which direction?
+		if     dir == "north"	then return Direction.new( 0,  1)
+		elseif dir == "south"	then return Direction.new( 0, -1)
+		elseif dir == "west"	then return Direction.new(-1,  0)
+		elseif dir == "east"	then return Direction.new( 1,  0)
+
+		-- not good
+		else return error("Direction.new(direction) - Invalid compass direction: " .. tostring(dx))
+		end
+	else
+		-- must be numeric
+		if (type(dx) ~= "number") or (type(dy) ~= "number") or (math.abs(dx + dy) ~= 1) or (dx * dy ~= 0) then error("Direction.new(dx, dy) - Invalid direction values: (" .. tostring(dx) .. ", " .. tostring(dy) .. ")") end
+
+		-- klaar
+		return {
+			dx = dx,
+			dy = dy
+		}
+	end
+end
+
+function Direction.isValid(direction)
+	return (type(direction) == "table") and (type(direction.dx) == "number") and (type(direction.dy) == "number") and (math.abs(direction.dx + direction.dy) == 1) and (direction.dx * direction.dy == 0)
 end
 
 function Direction.clone(direction)
-	if not validDirection(direction) then return error("Direction.clone(direction) - Invalid direction value") end
+	if not Direction.isValid(direction) then return error("Direction.clone(direction) - Invalid direction value") end
 	return Direction.new(direction.dx, direction.dy)
 end
 
 function Direction.equals(dir1, dir2)
-	if not validDirection(dir1) then return error("Direction.equals(dir1, dir2) - Invalid direction value (dir1)") end
-	if not validDirection(dir2) then return error("Direction.equals(dir1, dir2) - Invalid direction value (dir2)") end
+	if not Direction.isValid(dir1) then return error("Direction.equals(dir1, dir2) - Invalid direction value (dir1)") end
+	if not Direction.isValid(dir2) then return error("Direction.equals(dir1, dir2) - Invalid direction value (dir2)") end
 	return dir1.dx == dir2.dx and dir1.dy == dir2.dy
 end
 
 function Direction.turnLeft(direction)
-	if not validDirection(direction) then return error("Direction.turnLeft(direction) - Invalid direction value") end
+	if not Direction.isValid(direction) then return error("Direction.turnLeft(direction) - Invalid direction value") end
 	return Direction.new(-direction.dy, direction.dx)
 end
 
 function Direction.turnRight(direction)
-	if not validDirection(direction) then return error("Direction.turnRight(direction) - Invalid direction value") end
+	if not Direction.isValid(direction) then return error("Direction.turnRight(direction) - Invalid direction value") end
 	return Direction.new(direction.dy, -direction.dx)
 end
 
