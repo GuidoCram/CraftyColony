@@ -272,6 +272,9 @@ function Inventory.organize()
 		end
 	end
 
+	-- done
+	turtle.select(16)
+
 	-- save the database
 	saveDB()
 end
