@@ -329,7 +329,7 @@ local function forwardToNextTree(n)
 
 			-- only useful when we actually have a sapling
 			local inventory = Inventory.getItemCounts()
-			if inventory["minecraft:birch_sapling"] > 0 then
+			if inventory["minecraft:birch_sapling"] then
 
 				-- if there is a block below us, remove it
 				if success then turtle.digDown() end
@@ -396,7 +396,7 @@ local function walkForestRound()
     local lastLaneHalf	= (db.currentWidth % 2 == 1)				-- is the last lane only half a lane?
 
 	-- walking to the second row is only usefull when depth > 1
-    if db.currentDepth > 1 then forwardThroughForest(6) end
+    if db.currentDepth > 1 then forwardToNextTree() end
 
     -- move for every lane (up and down)
     for i=1, numberOfLanes do

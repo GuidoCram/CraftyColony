@@ -114,6 +114,18 @@ function Direction.turnRight(direction)
 	return Direction.new(direction.dy, -direction.dx)
 end
 
+function Direction.toString(direction)
+	if not Direction.isValid(direction) then return error("Direction.toString(direction) - Invalid direction value") end
+
+	if     direction.dx ==  0 and direction.dy ==  1 then return "north"
+	elseif direction.dx ==  0 and direction.dy == -1 then return "south"
+	elseif direction.dx == -1 and direction.dy ==  0 then return "west"
+	elseif direction.dx ==  1 and direction.dy ==  0 then return "east"
+	else
+		return "unknown"
+	end
+end
+
 --[[
            _
           | |
