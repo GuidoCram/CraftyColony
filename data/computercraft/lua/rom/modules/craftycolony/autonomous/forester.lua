@@ -50,7 +50,7 @@ local db = {
 	maxWidth		= 6,
 	maxDepth		= 6,
 
-	currentWidth	= 2,
+	currentWidth	= 6,
 	currentDepth	= 6,
 
 	-- locations
@@ -307,6 +307,63 @@ local function forwardThroughForest(n)
     end
 end
 
+local function forwardToNextTree(n)
+	-- set default
+	n = n or 1
+
+	-- do n times
+	for _ = 1, n do
+
+		-- move forward to next tree position
+		forwardThroughForest(6)
+
+		-- check if there is a sappling under us
+		local success, data = turtle.inspectDown()
+		if not success or type(data) ~= "table" or data.name ~= "minecraft:birch_sapling" then
+
+			-- only useful when we actually have a sapling
+			local inventory = Inventory.getItemCounts()
+			if inventory["minecraft:birch_sapling"] > 0 then
+
+				-- if there is a block below us, remove it
+				if success then turtle.digDown() end
+
+				-- check for the ground
+				Move.down()
+				local success, data = turtle.inspectDown()
+
+				-- if its dirt or grass, we can plant a sapling
+				if success and type(data) == "table" and type(data.tags) == "table" and data.tags["minecraft:dirt"] then
+
+					-- plant sapling
+					Inventory.selectItem("minecraft:birch_sapling")
+					turtle.placeDown()
+				else
+
+					-- it's not suitable, maybe we have dirt with us
+					if inventory["minecraft:dirt"] > 0 then
+
+						-- remove item below us
+						if success then turtle.digDown() end
+
+						-- place dirt
+						if Inventory.selectItem("minecraft:dirt")	then turtle.placeDown()
+																	else Inventory.selectItem("minecraft:grass_block") turtle.placeDown()
+						end
+					end
+
+					-- plant sapling
+					Inventory.selectItem("minecraft:birch_sapling")
+					turtle.placeDown()
+				end
+
+				-- back to position
+				Move.up()
+			end
+		end
+	end
+end
+
 
 local function walkForestRound()
 
@@ -338,32 +395,35 @@ local function walkForestRound()
         local lastLane = (i == numberOfLanes)
 
         -- move to "top right" lane
-        forwardThroughForest(6 * (db.currentDepth - 2))
+		forwardToNextTree(db.currentDepth - 2)
+--        forwardThroughForest(6 * (db.currentDepth - 2))
 
         -- we are at the top now, turn left for positioning to the next lane
         Move.turnLeft()
 
 		-- do we have a next lane? just don't do it when we are at the end
-        if not (lastLane and lastLaneHalf) then forwardThroughForest(6) end
+        if not (lastLane and lastLaneHalf) then forwardToNextTree() end
 
         -- move to "bottom left" lane
         Move.turnLeft()
-        forwardThroughForest(6 * (db.currentDepth - 2))
+		forwardToNextTree(db.currentDepth - 2)
+--        forwardThroughForest(6 * (db.currentDepth - 2))
 
         -- (optionally) move and turn to start ("bottom right") next lane
         if not lastLane then
             Move.turnRight()
-            forwardThroughForest(6)
+            forwardToNextTree()
+--            forwardThroughForest(6)
             Move.turnRight()
         end
     end
 
     -- terug naar huis, kan wat speciale dingen met zich mee brengen
-    if db.currentDepth > 1 then forwardThroughForest(6) end
+    if db.currentDepth > 1 then forwardToNextTree() end
 
     -- over de volledige breedte terug naar
     Move.turnLeft()
-    forwardThroughForest(6 * (db.currentWidth - 1))
+    forwardToNextTree(db.currentWidth - 1)
 
     -- terug in positie
 	Move.goTo(db.restLocation)
