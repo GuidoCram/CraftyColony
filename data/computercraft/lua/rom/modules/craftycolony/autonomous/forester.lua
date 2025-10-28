@@ -54,6 +54,7 @@ local db = {
 	-- locations
 	restLocation			= Location.new(3, 2,  0),
 	startLocation			= Location.new(3, 2,  1),
+	firstTreeLocation		= Location.new(3, 3,  1),
 	saplingChestLocation	= Location.new(4, 1, -1),
 	logChestLocation		= Location.new(5, 2, -1),
 	charcoalChestLocation	= Location.new(5, 4, -1),
@@ -95,7 +96,19 @@ local function init()
 	db.initialized = true
 end
 
-local function forwardAndHarvestLeaves(harvestAbove)
+local function harvestBirchCrownLeaves()
+
+    -- get to the crown
+    for i=1,2 do Move.up() turtle.digUp() end
+
+    -- dig around
+    for i=1,4 do turtle.dig() Move.turnRight() end
+
+    -- back into position
+    for i=1,2 do Move.down() end
+end
+
+local function forwardAndHarvestBirchLeaves(harvestAbove)
 
 	-- make space in front of us
     turtle.dig()
@@ -122,54 +135,54 @@ local function harvestBirchLeaves()
 --]]
 
 	-- 0 → 1
-    forwardAndHarvestLeaves(true)
-    forwardAndHarvestLeaves(false)
+    forwardAndHarvestBirchLeaves(true)
+    forwardAndHarvestBirchLeaves(false)
 
 	-- 1 → 2
     Move.turnRight()
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
 
 	-- 2 → 3
     Move.turnRight()
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
 
 	-- 3 → 4
     Move.turnRight()
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
 
 	-- 4 → 5
     Move.turnRight()
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
-    forwardAndHarvestLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
 
 	-- 5 → 6
     Move.turnRight()
-    forwardAndHarvestLeaves(false)
+    forwardAndHarvestBirchLeaves(false)
 
 	-- 6 → 7
     Move.turnRight()
-    forwardAndHarvestLeaves(true)
-    forwardAndHarvestLeaves(true)
-    forwardAndHarvestLeaves(true)
+    forwardAndHarvestBirchLeaves(true)
+    forwardAndHarvestBirchLeaves(true)
+    forwardAndHarvestBirchLeaves(true)
 
 	-- 7 → 8
     Move.turnLeft()
-    forwardAndHarvestLeaves(true)
-    forwardAndHarvestLeaves(true)
+    forwardAndHarvestBirchLeaves(true)
+    forwardAndHarvestBirchLeaves(true)
 
 	-- 8 → 9
     Move.turnLeft()
-    forwardAndHarvestLeaves(true)
-    forwardAndHarvestLeaves(true)
+    forwardAndHarvestBirchLeaves(true)
+    forwardAndHarvestBirchLeaves(true)
 
 	-- 9 → 0
     Move.turnLeft()		-- terug naar de 0-1 lijn
@@ -178,7 +191,7 @@ local function harvestBirchLeaves()
     Move.back()			-- achteruit inparkeren
 end
 
-local function harvestTreeBirch()
+local function harvestBirchTree()
 
 	-- variables
     local height    = 1	-- starting height (we're one block above ground level)
@@ -206,11 +219,10 @@ local function harvestTreeBirch()
     -- all the wood is gone (except for the top block), now the leaves
     harvestBirchLeaves()
 
-    -- topblock last to prevent leaves from decaying too early
-    turtle.digUp()
-
     -- do we need the crown too?
---    if Inventory.getItemCounts()["minecraft:birch_sapling"] < 2 then ChopCrown() end
+	local inventory = Inventory.getItemCounts()
+    if inventory["minecraft:birch_sapling"] < 2 then harvestBirchCrownLeaves()	-- move to the top and harvest leaves (5 leaves, not much chance for sapling but better than nothing)
+												else turtle.digUp() end			-- remove topblock (it's still there to prevent leaves from decaying too early)
 
     -- back to where we started
     Move.down(height)
@@ -240,12 +252,104 @@ local function detectTree()
     if not success or type(data) ~= "table" or type(data.name) ~= "string" then return nil end
 
     -- staat er een berkenboom voor onze neus?
-    if data.name == "minecraft:birch_log"	then return "birch"
-											else return nil
+    if data.name == "minecraft:birch_log" then
+
+		-- yes, return type
+		return "birch"
+	else
+
+		-- make space, should never be needed, just to be safe
+		turtle.dig()
+		turtle.attack()
+
+		-- no tree detected
+		return nil
 	end
 end
 
-local function moveThroughForest()
+local function forwardThroughForest(n)
+	-- set default
+	n = n or 1
+
+    -- het gewenste aantal stappen zetten
+    for _ = 1, n do
+
+        -- something in front of us?
+		local treeType = detectTree()
+        if treeType then
+
+			-- which tree is it?
+			if treeType == "birch"	then harvestBirchTree()
+									else print("Unknown tree type: "..tostring(treeType))
+			end
+
+		-- nothing in front of us
+        else Move.forward()
+        end
+    end
+end
+
+
+local function walkForestRound()
+
+	-- eerst in positie komen (in de stam van de eerste boom)
+    Move.goTo(db.startLocation)
+	forwardThroughForest(1)
+
+
+--[[
+↓←↓←↓←
+↓↑↓↑↓↑
+↓↑↓↑↓↑
+↓↑↓↑↓↑
+↓↑←↑←↑
+→→→→→O
+--]]
+
+    -- calculate the route through the forest
+    local numberOfLanes	= math.ceil(db.currentWidth / 2)			-- number of lanes is the number of pairs of rows
+    local lastLaneHalf	= (db.currentWidth % 2 == 1)				-- is the last lane only half a lane?
+
+	-- walking to the second row is only usefull when depth > 1
+    if db.currentDepth > 1 then forwardThroughForest(6) end
+
+    -- move for every lane (up and down)
+    for i=1, numberOfLanes do
+
+        -- determine last lane
+        local lastLane = (i == numberOfLanes)
+
+        -- move to "top right" lane
+        forwardThroughForest(6 * (db.currentDepth - 2))
+
+        -- we are at the top now, turn left for positioning to the next lane
+        Move.turnLeft()
+
+		-- do we have a next lane? just don't do it when we are at the end
+        if not (lastLane and lastLaneHalf) then forwardThroughForest(6) end
+
+        -- move to "bottom left" lane
+        Move.turnLeft()
+        forwardThroughForest(6 * (db.currentDepth - 2))
+
+        -- (optionally) move and turn to start ("bottom right") next lane
+        if not lastLane then
+            Move.turnRight()
+            forwardThroughForest(6)
+            Move.turnRight()
+        end
+    end
+
+    -- terug naar huis, kan wat speciale dingen met zich mee brengen
+    if db.currentDepth > 1 then forwardThroughForest(6) end
+
+    -- over de volledige breedte terug naar
+    Move.turnLeft()
+    forwardThroughForest(6 * (db.currentWidth - 1))
+
+    -- terug in positie
+	Move.goTo(db.restLocation)
+	Move.turnTo(db.restDirection)
 end
 
 --[[
@@ -266,20 +370,25 @@ function Forester.harvestForest()
 	-- make sure we're initialized
 	if not db.initialized then init() end
 
+	-- do the forest round
+	walkForestRound()
+
+--[[
 	-- let's get into position
 	Move.goTo(db.startLocation)
 	Move.turnTo(db.startDirection)
 
 	-- debug, harvest the tree in front of us
 	local treeType = detectTree()
-	if treeType == "birch" then
-		harvestTreeBirch()
-	end
+	if treeType == "birch" then harvestBirchTree() end
 
 	-- let's get into position
 	Move.goTo(db.restLocation)
 	Move.turnTo(db.restDirection)
+--]]
 
+	-- all done
+	return true
 
 end
 
