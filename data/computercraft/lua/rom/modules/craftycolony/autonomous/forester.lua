@@ -68,6 +68,9 @@ local db = {
 	-- fuel usage
 	maxFuelPerTree		= 35,
 	maxFuelBetweenTrees	= 6,
+
+	-- state of the forest
+	neverGrown		= {},
 }
 
 --[[
@@ -219,6 +222,9 @@ local function harvestBirchTree()
     Move.forward()
     turtle.digDown() -- remove the log at our feet
 
+	-- this is the location where the sapling was planted, aperently the tree has grown
+	db.neverGrown[Location.toString(Move.getLocation())] = nil
+
     -- move up until we see leaves
     while not turtle.inspect() do
 
@@ -336,12 +342,14 @@ local function forwardToNextTree(n)
 				if success and type(data) == "table" and type(data.tags) == "table" and data.tags["minecraft:dirt"] then
 
 					-- plant sapling
+					Move.up()
 					Inventory.selectItem("minecraft:birch_sapling")
+					db.neverGrown[Location.toString(Move.getLocation())] = true
 					turtle.placeDown()
 				else
 
 					-- it's not suitable, maybe we have dirt with us
-					if inventory["minecraft:dirt"] > 0 then
+					if inventory["minecraft:dirt"] then
 
 						-- remove item below us
 						if success then turtle.digDown() end
@@ -350,15 +358,17 @@ local function forwardToNextTree(n)
 						if Inventory.selectItem("minecraft:dirt")	then turtle.placeDown()
 																	else Inventory.selectItem("minecraft:grass_block") turtle.placeDown()
 						end
+
+						-- plant sapling
+						Move.up()
+						Inventory.selectItem("minecraft:birch_sapling")
+						db.neverGrown[Location.toString(Move.getLocation())] = true
+						turtle.placeDown()
+					else
+						-- just back up, we failed
+						Move.up()
 					end
-
-					-- plant sapling
-					Inventory.selectItem("minecraft:birch_sapling")
-					turtle.placeDown()
 				end
-
-				-- back to position
-				Move.up()
 			end
 		end
 	end
@@ -396,7 +406,6 @@ local function walkForestRound()
 
         -- move to "top right" lane
 		forwardToNextTree(db.currentDepth - 2)
---        forwardThroughForest(6 * (db.currentDepth - 2))
 
         -- we are at the top now, turn left for positioning to the next lane
         Move.turnLeft()
@@ -407,13 +416,11 @@ local function walkForestRound()
         -- move to "bottom left" lane
         Move.turnLeft()
 		forwardToNextTree(db.currentDepth - 2)
---        forwardThroughForest(6 * (db.currentDepth - 2))
 
         -- (optionally) move and turn to start ("bottom right") next lane
         if not lastLane then
             Move.turnRight()
             forwardToNextTree()
---            forwardThroughForest(6)
             Move.turnRight()
         end
     end
