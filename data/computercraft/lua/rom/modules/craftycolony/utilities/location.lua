@@ -130,6 +130,28 @@ function Location.back(location, n, direction)
 	return location
 end
 
+function Location.allNeighborLocations(location)
+	-- check parameters
+	if not Location.isValid(location) then return nil, "invalid location" end
+
+	return {{x = location.x + 1, y = location.y,     z = location.z    }, -- east
+			{x = location.x - 1, y = location.y,     z = location.z    }, -- west
+			{x = location.x,     y = location.y + 1, z = location.z    }, -- south
+			{x = location.x,     y = location.y - 1, z = location.z    }, -- north
+			{x = location.x,     y = location.y,     z = location.z + 1}, -- up
+			{x = location.x,     y = location.y,     z = location.z - 1}} -- down
+end
+
+function Location.sideLocations(location)
+	-- check parameters
+	if not Location.isValid(location) then return nil, "invalid location" end
+
+	return {{x = location.x + 1, y = location.y,     z = location.z    }, -- east
+			{x = location.x - 1, y = location.y,     z = location.z    }, -- west
+			{x = location.x,     y = location.y + 1, z = location.z    }, -- south
+			{x = location.x,     y = location.y - 1, z = location.z    }} -- north
+end
+
 function Location.toString(location)
 	-- check parameters
 	if not Location.isValid(location) then return nil, "invalid location" end
