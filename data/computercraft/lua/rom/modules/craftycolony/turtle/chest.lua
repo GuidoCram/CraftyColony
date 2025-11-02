@@ -144,46 +144,47 @@ end
 function Chest.organize(chest)
 
 	-- variables
-	local chestSize = chest.size()
+	local chestSize	= chest.size()
+	local itemList	= chest.list()
 
 	-- just move everything to the back, ignore errors
-	for source = 1, chestSize do
+	for source = chestSize - 1, 1, -1 do
 
 		-- anything in this slot?
-		if db.slots[source] and db.slots[source].count then
+		if itemList[source] and itemList[source].count then
 
 			-- transfer to whatever is allowed
 			for target = chestSize, source + 1, -1 do
 
+				-- get details of the target slot
+				local details = chest.getItemDetail(target)
+
 				-- check if we can transfer to this slot, then transfer the maximum possible
-				if not db.slots[target] or (db.slots[target].name == db.slots[source].name and db.slots[target].count < db.slots[target].maxCount) then
+				if not itemList[target] or (itemList[target].name == itemList[source].name and details.count < details.maxCount) then
+
+					-- if we don't have a target, that is bad so we better simulate a target with count 0
+					details = chest.getItemDetail(source)
+					details.count = 0
 
 					-- if we have no target, that is bad so we better prevent that by adding it with count 0
-					if not db.slots[target] then db.slots[target] = { name = db.slots[source].name, count = 0, maxCount = db.slots[source].maxCount } end
+					if not itemList[target] then itemList[target] = { name = itemList[source].name, count = 0, maxCount = details.maxCount } end
 
 					-- calc amount to transfer
-					local amount = math.min( db.slots[source].count, db.slots[source].maxCount - db.slots[target].count )
+					local amount = math.min( itemList[source].count, details.maxCount - details.count )
 
 					-- actually transfer the items
-					if turtle.getSelectedSlot() ~= source then turtle.select(source) end
-					turtle.transferTo(target, amount)
+					chest.pushItems(peripheral.getName(chest), source, amount, target)
 
 					-- update target
-					db.slots[target].count	= db.slots[target].count + amount
+					itemList[target].count	= itemList[target].count + amount
 
 					-- update source
-					db.slots[source].count = db.slots[source].count - amount
-					if db.slots[source].count <= 0 then db.slots[source] = nil break end
+					itemList[source].count = itemList[source].count - amount
+					if itemList[source].count <= 0 then itemList[source] = nil break end
 				end
 			end
 		end
 	end
-
-	-- done
-	turtle.select(16)
-
-	-- save the database
-	saveDB()
 end
 
 --[[
