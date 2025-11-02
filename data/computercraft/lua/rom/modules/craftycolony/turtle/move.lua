@@ -13,6 +13,10 @@ local Move = {
 	-- returns {x, y, z}
 	setLocation = function(location) end,
 
+	-- Set the turtle's direction (useful for initialization).
+	-- returns {dx, dy}
+	setDirection = function(direction) end,
+
 	-- Move forward a number of steps (default 1).
 	-- returns (true|false, err)
 	forward = function(steps) end,
@@ -170,7 +174,7 @@ local function move(steps, direction)
 		if not success then return false, "Move.forward: unable to move forward at step "..i..": "..tostring(err) end
 
 		-- update location
-		db.location = locationUpdateFunc(db.location, db.direction, 1)
+		db.location = locationUpdateFunc(db.location, 1, db.direction)
 		saveDB()
 	end
 
@@ -505,6 +509,22 @@ function Move.setLocation(location)
 
 	-- done
 	return location
+end
+
+function Move.setDirection(direction)
+	-- usefull when a new computer is just created and has no direction yet
+
+	-- make sure we are initialized
+	if not db.initialized then init() end
+
+	-- update the direction
+	db.direction = Direction.clone(direction)
+
+	-- save the database
+	saveDB()
+
+	-- done
+	return direction
 end
 
 -- function to move forward a number of steps
