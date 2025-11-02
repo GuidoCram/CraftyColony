@@ -4,6 +4,14 @@ local Chest = {
 	-- Wrap a chest at the given location as a peripheral if it's adjacent to the turtle.
 	-- returns peripheral object or (nil, error)
 	wrap = function(chestLocation) end,
+
+	-- Get a list of items with their counts from the chest peripheral.
+	-- returns table: itemName = count
+	getItemCounts = function(chest) end,
+
+	-- Organize items in the given chest peripheral.
+	-- no return
+	organize = function(chest) end
 }
 
 -- imports
@@ -106,7 +114,7 @@ function Chest.wrap(chestLocation)
 
 	-- hopefully on one of the sides
 	local currentDirection	= Move.getDirection()
-	local side				= Direction.getSide(currentDirection, currentLocation, chestLocation)
+	local side				= Direction.getSide(currentDirection, chestLocation.x - currentLocation.x, chestLocation.y - currentLocation.y, chestLocation.z - currentLocation.z)
 
 	-- did we get anything?
 	if side then return peripheral.wrap(side)
@@ -114,6 +122,69 @@ function Chest.wrap(chestLocation)
 	end
 end
 
+-- get a list of items with their counts
+-- returns table: itemName = count
+function Chest.getItemCounts(chest)
+
+	-- build counts table
+	local counts = {}
+	local items = chest.list()
+
+	for _, detail in pairs(items) do
+
+		-- check for item detail
+		if type(detail) == "table" and type(detail.name) == "string" and detail.name then counts[detail.name] = (counts[detail.name] or 0) + detail.count end
+	end
+
+	-- done
+	return counts
+end
+
+-- organize the inventory by grouping items together
+function Chest.organize(chest)
+
+	-- variables
+	local chestSize = chest.size()
+
+	-- just move everything to the back, ignore errors
+	for source = 1, chestSize do
+
+		-- anything in this slot?
+		if db.slots[source] and db.slots[source].count then
+
+			-- transfer to whatever is allowed
+			for target = chestSize, source + 1, -1 do
+
+				-- check if we can transfer to this slot, then transfer the maximum possible
+				if not db.slots[target] or (db.slots[target].name == db.slots[source].name and db.slots[target].count < db.slots[target].maxCount) then
+
+					-- if we have no target, that is bad so we better prevent that by adding it with count 0
+					if not db.slots[target] then db.slots[target] = { name = db.slots[source].name, count = 0, maxCount = db.slots[source].maxCount } end
+
+					-- calc amount to transfer
+					local amount = math.min( db.slots[source].count, db.slots[source].maxCount - db.slots[target].count )
+
+					-- actually transfer the items
+					if turtle.getSelectedSlot() ~= source then turtle.select(source) end
+					turtle.transferTo(target, amount)
+
+					-- update target
+					db.slots[target].count	= db.slots[target].count + amount
+
+					-- update source
+					db.slots[source].count = db.slots[source].count - amount
+					if db.slots[source].count <= 0 then db.slots[source] = nil break end
+				end
+			end
+		end
+	end
+
+	-- done
+	turtle.select(16)
+
+	-- save the database
+	saveDB()
+end
 
 --[[
            _
