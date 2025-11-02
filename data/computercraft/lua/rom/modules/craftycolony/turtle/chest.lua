@@ -1,14 +1,21 @@
 -- define module
 -- Public API overview (empty stubs; real implementations are defined below)
-local Generate = {
-  -- Generate a unique id string for this computer, format "<me>:<incrementing>".
-  -- returns string
-  id = function() end,
+local Chest = {
+	-- Wrap a chest at the given location as a peripheral if it's adjacent to the turtle.
+	-- returns peripheral object or (nil, error)
+	wrap = function(chestLocation) end,
 }
 
 -- imports
+local CoreData	= require("craftycolony.core.coredata")
 
-local CoreData = require("craftycolony.core.coredata")
+local Inventory	= require("craftycolony.turtle.inventory")
+local Move		= require("craftycolony.turtle.move")
+
+local Direction	= require("craftycolony.utilities.direction")
+local Location	= require("craftycolony.utilities.location")
+local Logger	= require("craftycolony.utilities.logger")
+
 
 --[[
       _                     _       _   _
@@ -21,7 +28,7 @@ local CoreData = require("craftycolony.core.coredata")
                              |_|
 
 
-  This module implements some generative functions, like unique id generation.
+  For interacting with chests: storing and retrieving items.
 
 --]]
 
@@ -36,18 +43,12 @@ local CoreData = require("craftycolony.core.coredata")
 --]]
 
 local db = {
+	-- module identity
+	moduleName  = "Chest",
 
-	-- moduleName
-	moduleName		= "Generate",
+	-- lifecycle
+	initialized = false,
 
-	-- is this module initialized?
-	initialized		= false,
-
-	-- just some knowledge about us
-	me				= os.getComputerID(),
-
-	-- keep track of the last used id
-	lastID			= 0,
 }
 
 --[[
@@ -60,7 +61,6 @@ local db = {
 
 --]]
 
-
 --[[
   _                 _
  | |               | |
@@ -71,14 +71,12 @@ local db = {
 
 --]]
 
+
+-- basic init function to setup the database
+-- no return
 local function init()
-	-- get the data from CoreData
-	data = CoreData.getData(db.moduleName)
 
-	-- load lastID
-	db.lastID = data.lastID or 0
-
-	-- update initialized
+	-- ready
 	db.initialized = true
 end
 
@@ -94,20 +92,28 @@ end
 
 --]]
 
-function Generate.id()
+function Chest.wrap(chestLocation)
 
-	-- make sure we are initialized
-	if not db.initialized then init() end
+	-- check for valid location
+	if not Location.isValid(chestLocation) then Logger.logError("Chest.wrap: invalid chest location") return nil end
 
-	-- increase the id
-	db.lastID = db.lastID + 1
+	-- get current location and direction
+	local currentLocation	= Move.getLocation()
 
-	-- save the database
-	CoreData.setData(db.moduleName, { lastID = db.lastID })
+	-- maybe top
+	if Location.isTop(   currentLocation, chestLocation) then return peripheral.wrap("top") end
+	if Location.isBottom(currentLocation, chestLocation) then return peripheral.wrap("bottom") end
 
-	-- return the new id
-	return db.me..":"..db.lastID
+	-- hopefully on one of the sides
+	local currentDirection	= Move.getDirection()
+	local side				= Direction.getSide(currentDirection, currentLocation, chestLocation)
+
+	-- did we get anything?
+	if side then return peripheral.wrap(side)
+	else return nil, "chest not found as neighbor"
+	end
 end
+
 
 --[[
            _
@@ -120,4 +126,4 @@ end
 --]]
 
 -- done
-return Generate
+return Chest

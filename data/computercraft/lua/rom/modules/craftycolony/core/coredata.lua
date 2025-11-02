@@ -1,5 +1,13 @@
 -- define module
-local CoreData = {}
+local CoreData = {
+  -- Public API Overview:
+  -- init() - Initialize the module
+  -- setup() - Setup the module
+  -- run() - Run the module
+  -- shutdown() - Shutdown the module
+  -- getData(moduleName) - Get the data for the given module
+  -- setData(moduleName, data) - Set the data for the given module
+}
 
 -- imports
 

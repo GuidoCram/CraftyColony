@@ -1,5 +1,20 @@
 -- CoreDisk.lua
-local CoreDisk = {}
+local CoreDisk = {
+  -- Public API Overview:
+  -- init() - Initialize the module
+  -- setup() - Setup the module
+  -- run() - Run the module
+  -- shutdown() - Shutdown the module
+  -- readFile(path, callback) - Read a file asynchronously
+  -- readFileIntoTable(path, callback) - Read a file into a table asynchronously
+  -- writeFile(path, data) - Write data to a file
+  -- writeTableToFile(path, data) - Write a table to a file
+  -- appendFile(path, data) - Append data to a file
+  -- appendTableToFile(path, data) - Append a table to a file
+  -- exists(path) - Check if a file exists
+  -- delete(path) - Delete a file
+  -- loadTableSync(path) - Load a table from a file synchronously
+}
 
 -- imports
 

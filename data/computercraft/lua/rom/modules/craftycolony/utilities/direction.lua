@@ -1,5 +1,33 @@
 -- define module
-local Direction = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local Direction = {
+	-- Create a new direction. Accepts either (dx, dy) or a compass string ("north","south","west","east").
+	new = function(dx, dy) end,
+
+	-- Validate a direction table: { dx = -1|0|1, dy = -1|0|1 } with |dx|+|dy| == 1
+	isValid = function(direction) end,
+
+	-- Clone a direction table.
+	clone = function(direction) end,
+
+	-- Check if two directions are equal.
+	isEquel = function(dir1, dir2) end,
+
+	-- Rotate 90 degrees counter-clockwise.
+	turnLeft = function(direction) end,
+
+	-- Rotate 90 degrees clockwise.
+	turnRight = function(direction) end,
+
+	-- Rotate 180 degrees.
+	turnAround = function(direction) end,
+
+	-- Determine relative side ("front","back","left","right") of targetLocation from baseLocation, given facing direction.
+	getSide = function(direction, baseLocation, targetLocation) end,
+
+	-- Convert a direction to a compass string ("north","south","west","east").
+	toString = function(direction) end,
+}
 
 -- imports
 local CoreDisk	= require("craftycolony.core.coredisk")
@@ -98,9 +126,9 @@ function Direction.clone(direction)
 	return Direction.new(direction.dx, direction.dy)
 end
 
-function Direction.equals(dir1, dir2)
-	if not Direction.isValid(dir1) then return error("Direction.equals(dir1, dir2) - Invalid direction value (dir1)") end
-	if not Direction.isValid(dir2) then return error("Direction.equals(dir1, dir2) - Invalid direction value (dir2)") end
+function Direction.isEquel(dir1, dir2)
+	if not Direction.isValid(dir1) then return error("Direction.isEquel(dir1, dir2) - Invalid direction value (dir1)") end
+	if not Direction.isValid(dir2) then return error("Direction.isEquel(dir1, dir2) - Invalid direction value (dir2)") end
 	return dir1.dx == dir2.dx and dir1.dy == dir2.dy
 end
 
@@ -112,6 +140,31 @@ end
 function Direction.turnRight(direction)
 	if not Direction.isValid(direction) then return error("Direction.turnRight(direction) - Invalid direction value") end
 	return Direction.new(direction.dy, -direction.dx)
+end
+
+function Direction.turnAround(direction)
+	if not Direction.isValid(direction) then return error("Direction.turnAround(direction) - Invalid direction value") end
+	return Direction.new(-direction.dx, -direction.dy)
+end
+
+function Direction.getSide(direction, baseLocation, targetLocation)
+	if not Direction.isValid(direction) then return error("Direction.getSide(direction, baseLocation, targetLocation) - Invalid direction value") end
+	if not Location.isValid(baseLocation) then return error("Direction.getSide(direction, baseLocation, targetLocation) - Invalid base location") end
+	if not Location.isValid(targetLocation) then return error("Direction.getSide(direction, baseLocation, targetLocation) - Invalid target location") end
+
+	-- calculate location differences, which make it a direction
+	local targetDirection = Direction.new(targetLocation.x - baseLocation.x, targetLocation.y - baseLocation.y)
+
+	-- check front and back
+	if Direction.isEquel(direction, targetDirection) then return "front" end
+	if Direction.isEquel(Direction.turnAround(direction), targetDirection) then return "back" end
+
+	-- check left and right
+	if Direction.isEquel(Direction.turnLeft(direction), targetDirection) then return "left" end
+	if Direction.isEquel(Direction.turnRight(direction), targetDirection) then return "right" end
+
+	-- not found
+	return nil
 end
 
 function Direction.toString(direction)

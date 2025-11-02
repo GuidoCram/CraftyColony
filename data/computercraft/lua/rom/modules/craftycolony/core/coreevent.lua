@@ -3,7 +3,33 @@
 -- helps with event registration, handling, and dispatching
 -- stuff not used yet
 
-local CoreEvent = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local CoreEvent = {
+	-- Initialize the event system.
+	-- no return
+	init = function() end,
+
+	-- Setup the event system.
+	-- no return
+	setup = function() end,
+
+	-- Register a callback function to listen for a specific event type.
+	-- no return
+	addEventListener = function(eventType, func) end,
+
+	-- Remove a previously registered event listener callback.
+	-- no return
+	removeEventListener = function(eventType, func) end,
+
+	-- Main event loop - listens for and dispatches all events to registered listeners.
+	-- Runs until shutdown is initiated.
+	-- no return
+	run = function() end,
+
+	-- Signal the event loop to shut down.
+	-- no return
+	shutdown = function() end,
+}
 
 -- imports
 local CoreDisk = require("craftycolony.core.coredisk")

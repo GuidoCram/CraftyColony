@@ -1,5 +1,22 @@
 -- define module
-local Inventory = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local Inventory = {
+	-- Select the first empty inventory slot. Organizes inventory if needed.
+	-- returns true if successful, false if no empty slots
+	selectEmpty = function() end,
+
+	-- Select the first slot containing an item by name.
+	-- returns true if successful, false if not found
+	selectItem = function(name) end,
+
+	-- Get item counts across all inventory slots.
+	-- returns table: { itemName = totalCount, ... }
+	getItemCounts = function() end,
+
+	-- Organize inventory by grouping same items together and compacting stacks.
+	-- no return
+	organize = function() end,
+}
 
 -- imports
 local CoreData = require("craftycolony.core.coredata")

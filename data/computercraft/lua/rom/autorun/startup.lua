@@ -13,6 +13,8 @@ local CoreSystem	= require("craftycolony.core.coresystem")
 local Inventory		= require("craftycolony.turtle.inventory")
 local Move			= require("craftycolony.turtle.move")
 
+local Direction		= require("craftycolony.utilities.direction")
+
 local Forester		= require("craftycolony.autonomous.forester")
 
 -- for writing files now
@@ -44,12 +46,41 @@ local function testCallback()
 
 	writeFileSync("/startup_log.txt", "w", "Startup callback executed at "..os.date("%Y-%m-%d %H:%M:%S").."\n\n")
 
---	Move.setLocation({x=3, y=2, z=0})
+	Move.setLocation({x=3, y=2, z=0})
+--	Move.setDirection("north")
 --	Move.goTo({{x=3, y= 2, z=0}})
 
+--	local north = Direction.new("north")
+--	Move.turnTo(north)  -- face north
+--	print(textutils.serialize(north))
+--[[
+	local north = Direction.new("north")
+
+	local currentDirection = Move.getDirection()
+	print("Current direction: "..Direction.toString(currentDirection))
+
+	Move.turnRight()
+	local currentDirection = Move.getDirection()
+	print("after turning right: "..Direction.toString(currentDirection))
+
+	Move.turnRight()
+	local currentDirection = Move.getDirection()
+	print("after turning right: "..Direction.toString(currentDirection))
+
+	Move.turnRight()
+	local currentDirection = Move.getDirection()
+	print("after turning right: "..Direction.toString(currentDirection))
+
+	Move.turnTo(north)  -- face north
+	local currentDirection = Move.getDirection()
+	print("after turning to north: "..Direction.toString(currentDirection))
+--]]
+
 	-- print the status of the Forester module
-	CoreAction.addActivity(Forester.harvestForest, nil, "normal", weAreDone, "Log Forester status")
-	while not done do print("current time: "..os.date("%H:%M:%S")) sleep(7) end
+	if 1 then
+		CoreAction.addActivity(Forester.harvestForest, nil, "normal", weAreDone, "Log Forester status")
+		while not done do print("current time: "..os.date("%H:%M:%S")) sleep(7) end
+	end
 
 	local data = turtle.getEquippedLeft()
 	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedLeft()\n")
@@ -58,7 +89,6 @@ local function testCallback()
 	data = turtle.getEquippedRight()
 	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedRight()\n")
 	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n")
-
 end
 
 -- let's go

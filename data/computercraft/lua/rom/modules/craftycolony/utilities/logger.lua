@@ -1,5 +1,22 @@
 -- define module
-local Logger = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local Logger = {
+	-- Write a log message to mainLog.txt with timestamp and computer ID.
+	-- no return
+	log = function(message) end,
+
+	-- Write a warning message to warningLog.txt and print to console.
+	-- no return
+	warning = function(message) end,
+
+	-- Write an error message to errorLog.txt and print to console.
+	-- no return
+	error = function(message) end,
+
+	-- Write a debug message to debugLog.txt (no console output).
+	-- no return
+	debug = function(message) end,
+}
 
 -- imports
 

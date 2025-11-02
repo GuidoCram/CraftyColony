@@ -1,5 +1,22 @@
 -- define module
-local CoreCom = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local CoreCom = {
+	-- Initialize the communication system.
+	-- no return
+	init = function() end,
+
+	-- Setup the communication system.
+	-- no return
+	setup = function() end,
+
+	-- Main communication loop - handles messages and communication.
+	-- no return
+	run = function() end,
+
+	-- Signal the communication system to shut down.
+	-- no return
+	shutdown = function() end,
+}
 
 -- imports
 

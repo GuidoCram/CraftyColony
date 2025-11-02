@@ -29,6 +29,20 @@ local Timer		= require("craftycolony.utilities.timer")
 --]]
 
 --[[
+  Local Functions Overview:
+  - initCallback(data) - Callback for loading saved data
+  - init() - Initialize the forester module
+  - harvestBirchCrownLeaves() - Harvest the crown leaves of a birch tree
+  - forwardAndHarvestBirchLeaves(harvestAbove) - Move forward and harvest birch leaves
+  - harvestBirchLeaves() - Harvest all leaves from a birch tree
+  - harvestBirchTree() - Complete birch tree harvesting process
+  - detectTree() - Detect if there's a tree in front
+  - forwardThroughForest(n) - Move forward through the forest
+  - forwardToNextTree(n) - Move forward to the next tree
+  - walkForestRound() - Walk one complete round through the forest
+--]]
+
+--[[
       _       _
      | |     | |
    __| | __ _| |_ __ _
@@ -461,33 +475,18 @@ function Forester.harvestForest()
 	-- do the forest round
 	walkForestRound()
 
---[[
-	-- let's get into position
-	Move.goTo(db.startLocation)
-	Move.turnTo(db.startDirection)
+	-- inspect chests
 
-	-- debug, harvest the tree in front of us
-	local treeType = detectTree()
-	if treeType == "birch" then harvestBirchTree() end
 
-	-- let's get into position
-	Move.goTo(db.restLocation)
-	Move.turnTo(db.restDirection)
---]]
+
+	-- store items
+
+
+
 
 	-- all done
 	return true
 
-end
-
-function Forester.getStatus()
-
-	return {
-		currentWidth	= db.currentWidth,
-		currentDepth	= db.currentDepth,
-		maxWidth		= db.maxWidth,
-		maxDepth		= db.maxDepth,
-	}
 end
 
 

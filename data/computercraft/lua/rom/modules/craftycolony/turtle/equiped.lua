@@ -1,5 +1,24 @@
 -- define module
-local Equiped = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local Equiped = {
+	-- Check if an item is currently equipped on either side.
+	-- returns boolean (true|false)
+	isEquiped = function(item) end,
+
+	-- Equip one or two items by name. Prefers empty sides and minimizes swaps.
+	-- Single parameter: equip(itemName) - equips to any side
+	-- Two parameters: equip(leftItem, rightItem) - equips to specific sides
+	-- returns restoreTable if changes made, nil if no changes, or (false, error) on failure
+	equip = function(first, second) end,
+
+	-- Unequip an item by name into an empty inventory slot.
+	-- returns (true|false, error)
+	free = function(item) end,
+
+	-- Restore equipment state from a restore table returned by equip().
+	-- no return (errors on failure)
+	restore = function(restoreTable) end,
+}
 
 -- imports
 local CoreData	= require("craftycolony.core.coredata")

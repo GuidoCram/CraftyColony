@@ -1,5 +1,22 @@
 -- define module
-local Timer = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local Timer = {
+	-- Create a one-time event that fires after 'ticks' (1/20 seconds). Calls callback(data) when timer expires.
+	-- returns timer id
+	createTimeEvent = function(ticks, callback, data) end,
+
+	-- Cancel a previously created time event by id.
+	-- no return
+	cancelTimeEvent = function(id) end,
+
+	-- Start a recurring ticker that fires every 'interval' ticks (1/20 seconds).
+	-- no return
+	startTicker = function(interval) end,
+
+	-- Stop the currently running ticker.
+	-- no return
+	stopTicker = function() end,
+}
 
 -- imports
 

@@ -1,5 +1,15 @@
 -- define module
-local CoreSystem = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local CoreSystem = {
+	-- Initialize and run the CraftyColony core system with all parallel components.
+	-- Executes callback when ready, then shuts down when callback completes.
+	-- no return
+	run = function(callback) end,
+
+	-- Initiate graceful shutdown of all core system components.
+	-- no return
+	shutdown = function() end,
+}
 
 -- imports
 local CoreAction    = require("craftycolony.core.coreaction")

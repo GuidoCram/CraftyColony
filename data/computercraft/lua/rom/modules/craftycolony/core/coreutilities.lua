@@ -3,7 +3,14 @@
 -- collection of utility functions for CraftyColony
 -- helps handling display and user interactions
 
-local CoreUtilities = {}
+local CoreUtilities = {
+  -- Public API Overview:
+  -- CoreUtilities.Direction - Access to Direction module
+  -- CoreUtilities.Generate - Access to Generate module
+  -- CoreUtilities.Location - Access to Location module
+  -- CoreUtilities.Logger - Access to Logger module
+  -- CoreUtilities.Timer - Access to Timer module
+}
 
 -- import right into the CoreUtilities table
 CoreUtilities.Direction	= require("craftycolony.utilities.direction")

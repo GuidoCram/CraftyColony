@@ -1,5 +1,26 @@
 -- define module
-local CoreAction = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local CoreAction = {
+	-- Add an activity to the queue to be executed based on priority.
+	-- no return
+	addActivity = function(func, data, priority, callback, description) end,
+
+	-- Initialize the action system.
+	-- no return
+	init = function() end,
+
+	-- Setup the action system.
+	-- no return
+	setup = function() end,
+
+	-- Main action processing loop - executes queued activities by priority.
+	-- no return
+	run = function() end,
+
+	-- Signal the action system to shut down.
+	-- no return
+	shutdown = function() end,
+}
 
 -- imports
 

@@ -4,7 +4,13 @@
 -- helps handling display and user interactions
 
 
-local CoreUI = {}
+local CoreUI = {
+  -- Public API Overview:
+  -- init() - Initialize the module
+  -- setup() - Setup the module
+  -- run() - Run the module
+  -- shutdown() - Shutdown the module
+}
 
 -- imports
 

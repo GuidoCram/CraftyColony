@@ -1,5 +1,51 @@
 -- define module
-local Move = {}
+-- Public API overview (empty stubs; real implementations are defined below)
+local Move = {
+	-- Get the current location of the turtle.
+	-- returns {x, y, z}
+	getLocation = function() end,
+
+	-- Get the current direction the turtle is facing.
+	-- returns {dx, dy}
+	getDirection = function() end,
+
+	-- Set the turtle's location (useful for initialization).
+	-- returns {x, y, z}
+	setLocation = function(location) end,
+
+	-- Move forward a number of steps (default 1).
+	-- returns (true|false, err)
+	forward = function(steps) end,
+
+	-- Move backward a number of steps (default 1).
+	-- returns (true|false, err)
+	back = function(steps) end,
+
+	-- Move up a number of steps (default 1).
+	-- returns (true|false, err)
+	up = function(steps) end,
+
+	-- Move down a number of steps (default 1).
+	-- returns (true|false, err)
+	down = function(steps) end,
+
+	-- Turn left a number of times (default 1).
+	-- returns (true|false, err)
+	turnLeft = function(turns) end,
+
+	-- Turn right a number of times (default 1).
+	-- returns (true|false, err)
+	turnRight = function(turns) end,
+
+	-- Turn to face a specific direction.
+	-- returns (true|false, err)
+	turnTo = function(direction) end,
+
+	-- Navigate to target location(s) using Dijkstra pathfinding with automatic obstacle avoidance.
+	-- Accepts single location {x,y,z} or array of locations.
+	-- returns (true|false, err)
+	goTo = function(targetLocations) end,
+}
 
 -- imports
 local CoreData	= require("craftycolony.core.coredata")
@@ -124,7 +170,7 @@ local function move(steps, direction)
 		if not success then return false, "Move.forward: unable to move forward at step "..i..": "..tostring(err) end
 
 		-- update location
-		db.location = locationUpdateFunc(db.location, 1, db.direction)
+		db.location = locationUpdateFunc(db.location, db.direction, 1)
 		saveDB()
 	end
 
@@ -394,13 +440,13 @@ local function executePath(path)
 			local targetDirection = Direction.new(dx, dy)
 
 			-- turn until facing the right direction
-			while not Direction.equals(db.direction, targetDirection) do
+			while not Direction.isEquel(db.direction, targetDirection) do
 
 				-- this is what left looks like
 				local leftDir = Direction.turnLeft(db.direction)
 
 				-- requested direction same as left?
-				if Direction.equals(leftDir, targetDirection)	then Move.turnLeft(1)
+				if Direction.isEquel(leftDir, targetDirection)	then Move.turnLeft(1)
 																else Move.turnRight(1)
 				end
 			end
@@ -521,13 +567,13 @@ function Move.turnTo(direction)
 	if not db.initialized then init() end
 
 	-- turn until facing the right direction
-	while not Direction.equals(db.direction, direction) do
+	while not Direction.isEquel(db.direction, direction) do
 
 		-- this is what left looks like
 		local leftDir = Direction.turnLeft(db.direction)
 
 		-- requested direction same as left?
-		if Direction.equals(leftDir, direction)	then Move.turnLeft(1)
+		if Direction.isEquel(leftDir, direction)	then Move.turnLeft(1)
 												else Move.turnRight(1)
 		end
 	end
