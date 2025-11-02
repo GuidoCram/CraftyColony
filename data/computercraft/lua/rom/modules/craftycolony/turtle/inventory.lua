@@ -257,7 +257,7 @@ function Inventory.organize()
 	ensure(true)
 
 	-- just move everything to the back, ignore errors
-	for source = 1, 15 do
+	for source = 16 - 1, 1, -1 do
 
 		-- anything in this slot?
 		if db.slots[source] and db.slots[source].count then
