@@ -23,7 +23,7 @@ local Direction = {
 	turnAround = function(direction) end,
 
 	-- Determine relative side ("front","back","left","right") of targetLocation from baseLocation, given facing direction.
-	getSide = function(direction, baseLocation, targetLocation) end,
+	getSide = function(direction, dx, dy, dz) end,
 
 	-- Convert a direction to a compass string ("north","south","west","east").
 	toString = function(direction) end,
@@ -122,7 +122,13 @@ function Direction.isValid(direction)
 end
 
 function Direction.clone(direction)
-	if not Direction.isValid(direction) then return error("Direction.clone(direction) - Invalid direction value") end
+	-- in case someone is lazy and using the string form
+	if type(direction) == "string" then direction = Direction.new(direction) end
+
+	-- check parameters
+	if not Direction.isValid(direction) then return error("Direction.clone(direction) - Invalid direction value (" .. type(direction) .. ")") end
+
+	-- clone
 	return Direction.new(direction.dx, direction.dy)
 end
 
@@ -147,13 +153,14 @@ function Direction.turnAround(direction)
 	return Direction.new(-direction.dx, -direction.dy)
 end
 
-function Direction.getSide(direction, baseLocation, targetLocation)
-	if not Direction.isValid(direction) then return error("Direction.getSide(direction, baseLocation, targetLocation) - Invalid direction value") end
-	if not Location.isValid(baseLocation) then return error("Direction.getSide(direction, baseLocation, targetLocation) - Invalid base location") end
-	if not Location.isValid(targetLocation) then return error("Direction.getSide(direction, baseLocation, targetLocation) - Invalid target location") end
+function Direction.getSide(direction, dx, dy, dz)
+	if not Direction.isValid(direction) then return error("Direction.getSide(direction, dx, dy, dz) - Invalid direction value") end
 
-	-- calculate location differences, which make it a direction
-	local targetDirection = Direction.new(targetLocation.x - baseLocation.x, targetLocation.y - baseLocation.y)
+	-- does not work on z axis
+	if type(dz) ~= "number" or dz ~= 0 then return nil end
+
+	-- make direction of differences between self and target
+	local targetDirection = Direction.new(dx, dy)
 
 	-- check front and back
 	if Direction.isEquel(direction, targetDirection) then return "front" end
@@ -163,7 +170,7 @@ function Direction.getSide(direction, baseLocation, targetLocation)
 	if Direction.isEquel(Direction.turnLeft(direction), targetDirection) then return "left" end
 	if Direction.isEquel(Direction.turnRight(direction), targetDirection) then return "right" end
 
-	-- not found
+	-- not found, most likely further away
 	return nil
 end
 

@@ -64,8 +64,8 @@ local db = {
 	maxWidth		= 6,
 	maxDepth		= 6,
 
-	currentWidth	= 6,
-	currentDepth	= 6,
+	currentWidth	= 1,
+	currentDepth	= 1,
 
 	-- locations
 	restLocation			= Location.new(3, 2,  0),
