@@ -62,6 +62,9 @@ local Location = {
 
 local CoreDisk = require("craftycolony.core.coredisk")
 
+local Direction	= require("craftycolony.utilities.direction")
+local Logger	= require("craftycolony.utilities.logger")
+
 --[[
       _                     _       _   _
      | |                   (_)     | | (_)
@@ -185,6 +188,7 @@ function Location.forward(location, n, direction)
 	-- check parameters
 	if not Location.isValid(location) then return nil, "invalid location" end
 	if type(n) ~= "number" then n = 1 end
+	if not Direction.isValid(direction) then return nil, "invalid direction (" .. tostring(direction) .. ")" end
 
 	return Location.new(location.x + direction.dx * n, location.y + direction.dy * n, location.z)
 end
