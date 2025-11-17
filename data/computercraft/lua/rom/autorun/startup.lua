@@ -10,10 +10,12 @@ local CoreSystem	= require("craftycolony.core.coresystem")
 -- local CoreUtilities	= require("craftycolony.core.coreutilities")
 -- local Inventory		= require("craftycolony.turtle.inventory")
 -- local Equiped		= require("craftycolony.turtle.equiped")
+local Chest			= require("craftycolony.turtle.chest")
 local Inventory		= require("craftycolony.turtle.inventory")
 local Move			= require("craftycolony.turtle.move")
 
 local Direction		= require("craftycolony.utilities.direction")
+local Location		= require("craftycolony.utilities.location")
 
 local Forester		= require("craftycolony.autonomous.forester")
 
@@ -46,7 +48,35 @@ local function testCallback()
 
 	writeFileSync("/startup_log.txt", "w", "Startup callback executed at "..os.date("%Y-%m-%d %H:%M:%S").."\n\n")
 
-	Move.setLocation({x=3, y=2, z=0})
+	Move.setLocation({x=9, y=-2, z=1})
+	local chestLocation = Location.new(10,-2,1)  -- x=10, y=-2, z=1
+	local chest = Chest.wrap(chestLocation)
+
+	print("Accessing chest at "..Location.toString(chestLocation))
+	print("chest = "..tostring(chest))
+
+	print("The name of the chest peripheral is: "..peripheral.getName(chest))
+	print("The size of the chest is: "..chest.size().." slots")
+
+	-- lets organize the chest
+	Chest.organize(chest)
+
+	-- list items in chest
+	local items = chest.list()
+	writeFileSync("/startup_log.txt", "a", "Items in chest at "..Location.toString(chestLocation)..":\n")
+	writeFileSync("/startup_log.txt", "a", textutils.serialize(items).."\n\n")
+
+	-- see what the limit it
+	local details = chest.getItemDetail(5)
+	writeFileSync("/startup_log.txt", "a", "Item details in chest at "..Location.toString(chestLocation).." slot 5:\n")
+	writeFileSync("/startup_log.txt", "a", textutils.serialize(details).."\n\n")
+
+	-- see what the limit it
+	local limits = chest.getItemLimit(5)
+	writeFileSync("/startup_log.txt", "a", "Item limits in chest at "..Location.toString(chestLocation).." slot 5:\n")
+	writeFileSync("/startup_log.txt", "a", tostring(limits).."\n\n")
+
+--	Move.setLocation({x=3, y=2, z=0})
 --	Move.setDirection("north")
 --	Move.goTo({{x=3, y= 2, z=0}})
 
@@ -76,19 +106,19 @@ local function testCallback()
 	print("after turning to north: "..Direction.toString(currentDirection))
 --]]
 
-	-- print the status of the Forester module
-	if 1 then
+	-- run the Forester module
+	if 0 == 1 then
 		CoreAction.addActivity(Forester.harvestForest, nil, "normal", weAreDone, "Log Forester status")
 		while not done do print("current time: "..os.date("%H:%M:%S")) sleep(7) end
 	end
 
-	local data = turtle.getEquippedLeft()
-	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedLeft()\n")
-	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n\n")
+--	local data = turtle.getEquippedLeft()
+--	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedLeft()\n")
+--	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n\n")
 
-	data = turtle.getEquippedRight()
-	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedRight()\n")
-	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n")
+--	data = turtle.getEquippedRight()
+--	writeFileSync("/startup_log.txt", "a", "turtle.getEquippedRight()\n")
+--	writeFileSync("/startup_log.txt", "a", textutils.serialize(data).."\n")
 end
 
 -- let's go

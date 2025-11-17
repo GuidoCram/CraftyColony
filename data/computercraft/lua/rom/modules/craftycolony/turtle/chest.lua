@@ -9,7 +9,7 @@ local Chest = {
 	-- returns table: itemName = count
 	getItemCounts = function(chest) end,
 
-	-- Organize items in the given chest peripheral.
+	-- Organize items in the given chest peripheral, moving everything to the back and grouping stacks.
 	-- no return
 	organize = function(chest) end
 }
